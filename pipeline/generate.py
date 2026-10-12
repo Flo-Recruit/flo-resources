@@ -774,6 +774,18 @@ def wire_entry3l(data: dict) -> None:
             "Last Updated": "—",
         })
 
+    # One-off removal (Hannah 2026-10-12): Covington & Burling "Entry-Level Corporate Associate (Class
+    # of 2027)" (Flo Forward job 27362). Not a rule — a single id drop; remove this entry if the listing
+    # should ever come back. (Dropping the live row is enough: its Airtable survey twin is already
+    # suppressed upstream by the same job id / title, so no "Not yet open" placeholder reappears.)
+    _DROP_JOB_IDS = ("27362",)
+
+    def _kept(rec):
+        lk = rec.get("3L Job Listing")
+        href = lk.get("href", "") if isinstance(lk, dict) else ""
+        return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS)
+    table = [rec for rec in table if _kept(rec)]
+
     data["tables"]["entry3l"] = table
     print(f"  entry3l: {len(rows)} Class-2027 + {len(rows_2026)} Class-2026 listings (+{da_added} from Airtable survey)")
 
