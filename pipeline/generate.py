@@ -1769,6 +1769,61 @@ WHERE eventtype = 'load' AND url LIKE '%/forward/firms/%'
 GROUP BY 1, 2"""
 
 
+# offers_student = law-student candidates reaching the 'Offer' pipeline bucket, by status-log month
+# (Metabase Q7625 intent, simplified to monthly + scoped to Hiring Type = 'Law Student'). Counts
+# DISTINCT candidates per month; each job_app dated at its latest Offer-bucket status-log entry. db 2.
+# Demo/test orgs excluded (Q7625's list == NET_DEMO_ORGS). Student-title net matches Q7625's defaults.
+OFFERS_STUDENT_SQL = f"""
+SELECT YEAR(d) AS yr, MONTH(d) AS mo, COUNT(DISTINCT rid) AS n FROM (
+  SELECT ja.RECRUIT_ID AS rid, ja.ID AS jaid, MAX(sl.CREATED_AT) AS d
+  FROM JOB_APP ja
+  JOIN JOB j ON j.ID = ja.JOB_ID
+  JOIN JOB_APP_STATUS_LOG sl ON sl.JOB_APP_ID = ja.ID
+  JOIN JOB_PIPELINE_STEP jpls ON jpls.ID = sl.JOB_PIPELINE_STATUS_ID
+  JOIN JOB_PIPELINE_BUCKET jplb ON jplb.ID = jpls.JOB_PIPELINE_BUCKET_ID
+  WHERE jplb.NAME IN ('Offer')
+    AND (j.JOB_TYPE IN ('ATS') OR j.JOB_TYPE IS NULL)
+    AND ja.ORG_ID NOT IN ({NET_DEMO_ORGS})
+    AND LOWER(j.TITLE) REGEXP '1l|2l|summer|entry|clerk|diversity|fellow|scholar'
+    AND EXISTS (SELECT 1 FROM JOB_HIRING_TYPE jt JOIN HIRING_TYPE ht ON ht.ID=jt.HIRING_TYPE_ID
+                WHERE jt.JOB_ID=j.ID AND ht.NAME='Law Student')
+    AND sl.CREATED_AT >= '2023-07-01'
+  GROUP BY ja.ID, ja.RECRUIT_ID
+) a GROUP BY yr, mo"""
+
+
+# hired_student = law-student candidates moved into the 'Hired' bucket, by hired-status month (Metabase
+# Q9505 intent, monthly, scoped to Hiring Type = 'Law Student', ALL firm sizes — the attorney-headcount
+# filter is intentionally dropped). DISTINCT candidates per month; job_app dated at its latest Hired-
+# bucket log. Warehouse db 67 (Redshift, oltp_mysql schema). Demo orgs == NET_DEMO_ORGS.
+HIRED_STUDENT_SQL = f"""
+WITH hired AS (
+  SELECT sl."JOB_APP_ID" AS job_app_id, sl."CREATED_AT" AS hired_at,
+         rank() OVER (PARTITION BY sl."JOB_APP_ID" ORDER BY sl."CREATED_AT" DESC) rk
+  FROM oltp_mysql."JOB_APP_STATUS_LOG" sl
+  JOIN oltp_mysql."JOB_PIPELINE_STEP" jpls ON jpls."ID" = sl."JOB_PIPELINE_STATUS_ID"
+  JOIN oltp_mysql."JOB_PIPELINE_BUCKET" jplb ON jplb."ID" = jpls."JOB_PIPELINE_BUCKET_ID"
+  WHERE jplb."NAME" IN ('Hired')
+)
+SELECT DATE_PART(year, h.hired_at) AS yr, DATE_PART(month, h.hired_at) AS mo,
+       COUNT(DISTINCT ja."RECRUIT_ID") AS n
+FROM hired h
+JOIN oltp_mysql."JOB_APP" ja ON ja."ID" = h.job_app_id
+JOIN oltp_mysql."JOB" j ON j."ID" = ja."JOB_ID"
+JOIN oltp_mysql."ORG" o ON o."ID" = j."ORG_ID"
+WHERE h.rk = 1
+  AND (j."JOB_TYPE" IN ('ATS') OR j."JOB_TYPE" IS NULL)
+  AND ja."DELETED_AT" IS NULL
+  AND o."ID" NOT IN ({NET_DEMO_ORGS})
+  AND (j."TITLE" ILIKE '%student%' OR j."TITLE" ILIKE '%summer%' OR j."TITLE" ILIKE '%clerk%'
+       OR j."TITLE" ILIKE '%fellow%' OR j."TITLE" ILIKE '%scholar%' OR j."TITLE" ILIKE '%1l%'
+       OR j."TITLE" ILIKE '%2l%' OR j."TITLE" ILIKE '%diversity%')
+  AND EXISTS (SELECT 1 FROM oltp_mysql."JOB_HIRING_TYPE" jt JOIN oltp_mysql."HIRING_TYPE" ht ON ht."ID"=jt."HIRING_TYPE_ID"
+              WHERE jt."JOB_ID"=j."ID" AND ht."NAME"='Law Student')
+  AND h.hired_at >= '2023-07-01'
+GROUP BY 1, 2"""
+
+
 def _split_cycles(rows, key):
     by = {(int(r["yr"]), int(r["mo"])): int(r[key]) for r in rows}
     return {f"{cy}-{cy+1}": cycle_series(by, cy, 7) for cy in range(2022, 2027)}
@@ -1808,7 +1863,13 @@ GROUP BY yr, mo""")
     # Flo Forward firm profile views (Q8185, DWH) — monthly; pendo data starts 2024-08
     fvby = {(int(float(r["yr"])), int(float(r["mo"]))): int(r["n"]) for r in metabase_sql(67, FIRM_VIEWS_SQL)}
     ls["firm_views"] = {f"{cy}-{cy+1}": cycle_series(fvby, cy, 7) for cy in range(2022, 2027)}
-    print(f"  lawStudent charts: postings + appsubs + net_all + ls_all + accounts + outreach + lf + event_regs + firm_views")
+    # Law-student recruiting funnel (Hannah 2026-10-12): offers (Q7625 intent, db 2) + hired (Q9505
+    # intent, db 67), both scoped to Hiring Type = Law Student, monthly, Jul-Jun cycles.
+    oby = {(int(r["yr"]), int(r["mo"])): int(r["n"]) for r in metabase_sql(MB_DB, OFFERS_STUDENT_SQL)}
+    ls["offers_student"] = {f"{cy}-{cy+1}": cycle_series(oby, cy, 7) for cy in range(2023, 2027)}
+    hby = {(int(float(r["yr"])), int(float(r["mo"]))): int(r["n"]) for r in metabase_sql(67, HIRED_STUDENT_SQL)}
+    ls["hired_student"] = {f"{cy}-{cy+1}": cycle_series(hby, cy, 7) for cy in range(2023, 2027)}
+    print(f"  lawStudent charts: postings + appsubs + net_all + ls_all + accounts + outreach + lf + event_regs + firm_views + offers + hired")
 
 
 # ── OVERVIEW STAT TILES (runs last — derives from already-wired DATA.tables + a few flow
