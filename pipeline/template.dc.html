@@ -3045,7 +3045,7 @@ class Component extends DCLogic {
         Object.assign(chart('lf', 'Law firm student interview volume on Flo', (hcBucket === '500plus' ? '500+ attorney firms' : 'Under 500 attorneys') + ' · callback interviews, monthly', mkSA(hcBucket === '500plus' ? D.lf_500plus : D.lf_u500, SY, SYC)), { hasHcToggle: true }),
         chart('ls', 'Law school student interview volume on Flo', sSub, mkSA(D.ls_all, SY, SYC)),
         // Law-student recruiting funnel (Hannah 2026-10-12): submissions → offers → hired, grouped at the bottom
-        chart('appsubs', 'Flo Forward law student application submissions', 'All students · monthly', mkSA(D.appsubs, SY, SYC)),
+        chart('appsubs', 'Flo Forward law student application submissions', 'Tracked via ATS and "I applied" on Flo Forward · monthly', mkSA(D.appsubs, SY, SYC)),
         chart('offers', 'Law student candidates moved to Offer', 'Reached the Offer stage · monthly', mkSA(D.offers_student || {}, SY, SYC)),
         chart('hired', 'Law student candidates moved to Hired', 'Reached the Hired stage · all firm sizes · monthly', mkSA(D.hired_student || {}, SY, SYC)),
       ];
