@@ -13,7 +13,7 @@ Secrets (GitHub Actions env):
 
 Run:  METABASE_API_KEY=… AIRTABLE_TOKEN=… python3 generate.py
 """
-import json, os, re, sys, html, urllib.request, urllib.parse, pathlib, datetime, copy
+import json, os, re, sys, html, urllib.request, urllib.parse, pathlib, datetime, copy, difflib
 
 PIPE = pathlib.Path(__file__).parent
 DATA_JSON = PIPE / "data.json"
@@ -1110,8 +1110,14 @@ def wire_summer_split(data: dict) -> None:
             return False
         if k in _cycle_live_firms:
             return True
-        # firm-name variance (e.g. "O'Melveny" vs "O'Melveny & Myers"): accept a prefix match either way
-        return any(min(len(k), len(lk)) >= 6 and (k.startswith(lk) or lk.startswith(k)) for lk in _cycle_live_firms)
+        for lk in _cycle_live_firms:
+            # firm-name length variance ("O'Melveny" vs "O'Melveny & Myers"): prefix match either way
+            if min(len(k), len(lk)) >= 6 and (k.startswith(lk) or lk.startswith(k)):
+                return True
+            # small spelling variance / typo in the firm name ("Sorensen" vs "Sorenson")
+            if min(len(k), len(lk)) >= 8 and difflib.SequenceMatcher(None, k, lk).ratio() >= 0.9:
+                return True
+        return False
     for row in direct_apply_rows():
         lv = row["level"]
         if lv not in ("1L", "2L") or row["class"] != 2029:
