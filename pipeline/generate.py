@@ -1100,17 +1100,23 @@ def wire_summer_split(data: dict) -> None:
     # real listing. A firm's Airtable "upcoming" survey row is then a stale placeholder — its live
     # postings often sit on the other tab (a "2027 1L + 2028 2L …" title routes to the 2L table) or
     # under a differently-worded/office-split title the near-dup match can't catch — so drop it.
-    _cycle_live_firms = {_dd_firm_key(rec.get("Employer"))
-                         for lv2, b2 in (("1L", "open"), ("2L", "open2029"))
-                         for rec in out[lv2][b2] if _dd_firm_key(rec.get("Employer"))}
+    # Live firms this cycle, keyed PER LEVEL (a firm live in 2L must not suppress its 1L survey
+    # rows, and vice versa — e.g. Sidley is live in 2L but also submitted a distinct 1L role).
+    _cycle_live_firms = {"1L": set(), "2L": set()}
+    for lv2, b2 in (("1L", "open"), ("2L", "open2029")):
+        for rec in out[lv2][b2]:
+            fk = _dd_firm_key(rec.get("Employer"))
+            if fk:
+                _cycle_live_firms[lv2].add(fk)
 
-    def _firm_live_this_cycle(firm):
+    def _firm_live_this_cycle(firm, lvl):
         k = _dd_firm_key(firm)
         if not k:
             return False
-        if k in _cycle_live_firms:
+        live = _cycle_live_firms.get(lvl, set())
+        if k in live:
             return True
-        for lk in _cycle_live_firms:
+        for lk in live:
             # firm-name length variance ("O'Melveny" vs "O'Melveny & Myers"): prefix match either way
             if min(len(k), len(lk)) >= 6 and (k.startswith(lk) or lk.startswith(k)):
                 return True
@@ -1146,9 +1152,10 @@ def wire_summer_split(data: dict) -> None:
             if len(near) == 1:
                 near[0][f"{lv} Position"] = at_title
             continue
-        # (3) Firm is already live this cycle (any tab, any title) -> the survey row is a stale
-        # "not yet open" placeholder; drop it.
-        if _firm_live_this_cycle(row["firm"]):
+        # (3) Firm is already live this cycle AT THIS LEVEL -> the survey row is a stale "not yet
+        # open" placeholder for its live postings; drop it. Level-scoped so a firm live only in 2L
+        # still surfaces a genuinely new 1L survey submission (and vice versa).
+        if _firm_live_this_cycle(row["firm"], lv):
             continue
         # (4) Exact duplicate already present. The Metabase guard stays firm+title (`seen`); among
         # Airtable survey rows, include the open date + offices (`seen_at`) so a firm that opens
