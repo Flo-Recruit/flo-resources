@@ -802,7 +802,7 @@ def wire_entry3l(data: dict) -> None:
 # Firm Profile -> '—' (no slug in Metabase, Hannah).
 SUMMER_SQL = """
 SELECT j.ID AS job_id, o.NAME AS firm, j.TITLE AS position,
-  j.OPEN_DATE AS open_date, j.CLOSE_DATE AS close_date, j.UPDATED_AT AS updated_at,
+  j.OPEN_DATE AS open_date, j.CLOSE_DATE AS close_date, j.UPDATED_AT AS updated_at, j.CREATED_AT AS created_at,
   EXISTS (SELECT 1 FROM FORWARD_JOB_GRAD_DATE_TARGET_RULE r WHERE r.JOB_ID=j.ID
           AND r.IS_NOT_DELETED=1 AND r.RULE_TYPE='INDIVIDUAL_YEARS' AND YEAR(r.MIN_GRAD_DATE)=2029) AS g1L,
   EXISTS (SELECT 1 FROM FORWARD_JOB_GRAD_DATE_TARGET_RULE r WHERE r.JOB_ID=j.ID
@@ -1026,13 +1026,11 @@ def _dedup_lateral(rows):
     return [r for i, r in enumerate(rows) if i not in drop]
 
 
-# TEMP manual override — see the note at the 2L open filter in wire_summer_split(). Remove together.
-_TEMP_2L_OPEN_FIRMS = {
-    "Jackson Walker",
-    "McDermott Will & Schulte",
-    "Parker, Hudson, Rainer & Dobbs LLP",
-    "Withers",
-}
+# Recency floor for the Class-of-2028 2L OPEN list (see wire_summer_split()). Flo Forward can't
+# reliably distinguish open from closed for these, so we bound the list by entry/post date instead
+# of a confirmed-open firm allowlist: keep roles ENTERED or POSTED on/after this date (ISO).
+# Roll forward ~1 year each recruiting cycle alongside the grad-year targets.
+_2L_OPEN_MIN_ENTRY = "2026-08-01"
 
 
 def wire_summer_split(data: dict) -> None:
@@ -1076,13 +1074,13 @@ def wire_summer_split(data: dict) -> None:
                 if cohort == 2029:
                     bucket = "open2029"    # active Class-of-2029 2L cycle — no firm allowlist
                 else:
-                    # TEMP (Hannah 2026-08-26): the Class-of-2028 2L OPEN list over-includes closed
-                    # postings that carry no close date on Flo Forward — the source can't distinguish
-                    # open from closed there. Hard-limit it to confirmed-open current-cycle firms.
-                    # Remove this block once the open/closed signal is resolved. (2029 cohort above is
-                    # intentionally exempt — it's the live cycle.)
+                    # Class-of-2028 2L OPEN list: Flo Forward can't reliably signal open/closed for
+                    # these (many carry no close date), so bound the list by recency instead — keep
+                    # only roles ENTERED or POSTED on/after _2L_OPEN_MIN_ENTRY (Hannah 2026-10-14;
+                    # replaces the old confirmed-open firm allowlist). 2029 cohort above stays exempt.
                     _od = str(r.get("open_date") or "")[:10]
-                    if r.get("firm") not in _TEMP_2L_OPEN_FIRMS or _od < "2026-06-01":
+                    _cd = str(r.get("created_at") or "")[:10]
+                    if max(_od, _cd) < _2L_OPEN_MIN_ENTRY:   # entered AND posted both before cutoff
                         continue
                     bucket = "open"
             else:
