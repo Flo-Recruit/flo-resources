@@ -981,6 +981,16 @@ def _dd_has_office(rec):
     return bool(o) and o != "—"
 
 
+def _dd_offices_distinct(a, b):
+    """True when both rows name offices and they share no city token — i.e. genuinely different
+    locations (NY vs LA), not blank-vs-filled. Used to keep a firm's distinct-city postings."""
+    def toks(r):
+        o = str(r.get("Office Location", "")).strip()
+        return _dd_title_tokens(o) if o and o != "—" else set()
+    ta, tb = toks(a), toks(b)
+    return bool(ta) and bool(tb) and not (ta & tb)
+
+
 def _dd_same_job(a, b, lvl):
     return (_dd_firm_key(a.get("Employer")) == _dd_firm_key(b.get("Employer"))
             and _dd_open(a, lvl) == _dd_open(b, lvl)
@@ -1100,29 +1110,36 @@ def wire_summer_split(data: dict) -> None:
     # real listing. A firm's Airtable "upcoming" survey row is then a stale placeholder — its live
     # postings often sit on the other tab (a "2027 1L + 2028 2L …" title routes to the 2L table) or
     # under a differently-worded/office-split title the near-dup match can't catch — so drop it.
-    # Live firms this cycle, keyed PER LEVEL (a firm live in 2L must not suppress its 1L survey
-    # rows, and vice versa — e.g. Sidley is live in 2L but also submitted a distinct 1L role).
-    _cycle_live_firms = {"1L": set(), "2L": set()}
+    # Live postings this cycle, grouped by (level, firm key) so a survey row can be matched against
+    # the firm's ACTUAL live rows — not merely "is the firm live". Per level (a 2L-live firm must not
+    # suppress its 1L survey rows). 1L uses the "open" bucket; 2L the active Class-2029 "open2029".
+    _cycle_live = {"1L": {}, "2L": {}}
     for lv2, b2 in (("1L", "open"), ("2L", "open2029")):
         for rec in out[lv2][b2]:
             fk = _dd_firm_key(rec.get("Employer"))
             if fk:
-                _cycle_live_firms[lv2].add(fk)
+                _cycle_live[lv2].setdefault(fk, []).append(rec)
 
-    def _firm_live_this_cycle(firm, lvl):
-        k = _dd_firm_key(firm)
+    def _firm_match(k, lk):
+        return (k == lk
+                or (min(len(k), len(lk)) >= 6 and (k.startswith(lk) or lk.startswith(k)))   # name-length variance
+                or (min(len(k), len(lk)) >= 8 and difflib.SequenceMatcher(None, k, lk).ratio() >= 0.9))  # typo
+
+    def _covered_by_live(rec, lvl):
+        """True when this survey row just duplicates one of the firm's live postings at this level —
+        a live row with a ~similar title (same generic role) AND no distinguishing city. A posting
+        that differs by practice group (title) and/or city is NOT covered, so we post both (e.g.
+        Sidley's general 2L alongside its live IP-Litigation 2L)."""
+        k = _dd_firm_key(rec.get("Employer"))
         if not k:
             return False
-        live = _cycle_live_firms.get(lvl, set())
-        if k in live:
-            return True
-        for lk in live:
-            # firm-name length variance ("O'Melveny" vs "O'Melveny & Myers"): prefix match either way
-            if min(len(k), len(lk)) >= 6 and (k.startswith(lk) or lk.startswith(k)):
-                return True
-            # small spelling variance / typo in the firm name ("Sorensen" vs "Sorenson")
-            if min(len(k), len(lk)) >= 8 and difflib.SequenceMatcher(None, k, lk).ratio() >= 0.9:
-                return True
+        for lk, recs in _cycle_live.get(lvl, {}).items():
+            if not _firm_match(k, lk):
+                continue
+            for L in recs:
+                if (_dd_titles_similar(rec.get(f"{lvl} Position"), L.get(f"{lvl} Position"))
+                        and not _dd_offices_distinct(rec, L)):
+                    return True
         return False
     for row in direct_apply_rows():
         lv = row["level"]
@@ -1152,10 +1169,10 @@ def wire_summer_split(data: dict) -> None:
             if len(near) == 1:
                 near[0][f"{lv} Position"] = at_title
             continue
-        # (3) Firm is already live this cycle AT THIS LEVEL -> the survey row is a stale "not yet
-        # open" placeholder for its live postings; drop it. Level-scoped so a firm live only in 2L
-        # still surfaces a genuinely new 1L survey submission (and vice versa).
-        if _firm_live_this_cycle(row["firm"], lv):
+        # (3) The survey row duplicates one of the firm's live postings at this level (same generic
+        # role, same/blank city) -> stale "not yet open" placeholder; drop it. A submission that
+        # differs by practice group and/or city is kept — post both (Hannah 2026-10-15).
+        if _covered_by_live(at_rec, lv):
             continue
         # (4) Exact duplicate already present. The Metabase guard stays firm+title (`seen`); among
         # Airtable survey rows, include the open date + offices (`seen_at`) so a firm that opens
