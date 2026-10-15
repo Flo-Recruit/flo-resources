@@ -972,6 +972,33 @@ def _dd_titles_similar(a, b):
     return len(ta & tb) / len(ta | tb) >= 0.7   # high bar so distinct practices/offices don't merge
 
 
+# Generic qualifier words that advertise breadth, not a specific practice group or city. They're
+# stripped before comparing a survey title to a live one so "2L Summer Associate 2028 (Multiple
+# Cities/Practice Areas)" reads as the same role as the plain "2L Summer Associate 2028" — while a
+# real specialty ("IP Litigation", "Antitrust", "Tax") is NOT generic, stays, and keeps its posting
+# distinct. Role/level words (summer/associate/1l/2l/3l/year) are deliberately left in.
+_DD_GENERIC = {
+    "multiple", "various", "several", "general", "firmwide", "all", "any",
+    "city", "cities", "office", "offices", "location", "locations", "market", "markets",
+    "practice", "practices", "area", "areas", "group", "groups", "department", "departments",
+    "position", "positions", "available", "availability", "opportunity", "opportunities",
+    "opening", "openings", "program", "programs", "role", "roles", "track", "tracks",
+}
+
+
+def _dd_core_tokens(s):
+    return _dd_title_tokens(s) - _DD_GENERIC
+
+
+def _dd_generic_dup(survey_title, live_title):
+    """True when a survey row just duplicates a live posting that is no more specific than it: every
+    real (non-generic) token in the live title is already in the survey, so the live only adds
+    'Multiple Cities/Practice Areas'-style filler. A live posting that names ANY real practice
+    ("IP Litigation", "Antitrust", "Tax") keeps an extra core token, so it is NOT a dup -> post both."""
+    s, l = _dd_core_tokens(survey_title), _dd_core_tokens(live_title)
+    return bool(s) and bool(l) and l <= s
+
+
 def _dd_open(rec, lvl):
     return str(rec.get(f"{lvl} Application Open Date", "")).replace("Opens ", "").strip()
 
@@ -1137,7 +1164,7 @@ def wire_summer_split(data: dict) -> None:
             if not _firm_match(k, lk):
                 continue
             for L in recs:
-                if (_dd_titles_similar(rec.get(f"{lvl} Position"), L.get(f"{lvl} Position"))
+                if (_dd_generic_dup(rec.get(f"{lvl} Position"), L.get(f"{lvl} Position"))
                         and not _dd_offices_distinct(rec, L)):
                     return True
         return False
