@@ -991,13 +991,33 @@ def _dd_core_tokens(s):
     return _dd_title_tokens(s) - _DD_GENERIC
 
 
-def _dd_generic_dup(survey_title, live_title):
-    """True when a survey row just duplicates a live posting that is no more specific than it: every
-    real (non-generic) token in the live title is already in the survey, so the live only adds
-    'Multiple Cities/Practice Areas'-style filler. A live posting that names ANY real practice
-    ("IP Litigation", "Antitrust", "Tax") keeps an extra core token, so it is NOT a dup -> post both."""
-    s, l = _dd_core_tokens(survey_title), _dd_core_tokens(live_title)
-    return bool(s) and bool(l) and l <= s
+# Universal role/level words that don't distinguish one summer posting from another (stripped, along
+# with year tokens and the row's own city, so a plain summer-associate posting has an empty specialty).
+_DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd"}
+
+
+def _dd_specialty(rec, lvl):
+    """The tokens that make a posting DISTINCT — its practice group or program name. Drops generic
+    breadth words, universal role/level words, year tokens, and the row's own city/office tokens (the
+    office is compared separately). A plain summer-associate posting reduces to {} ; only a real
+    specialty remains ("ip"/"litigation", "patent", a named fellowship like "wetmore")."""
+    toks = _dd_core_tokens(rec.get(f"{lvl} Position")) - _DD_ROLE
+    toks = {t for t in toks if not re.fullmatch(r"20\d\d", t)}
+    off = str(rec.get("Office Location", "")).strip()
+    if off and off != "—":
+        toks -= _dd_title_tokens(off)
+    return toks
+
+
+def _dd_generic_dup(survey_rec, live_rec, lvl):
+    """True when a survey row just duplicates one of the firm's live postings. A generic survey (no
+    specialty) is covered only by a live posting that is ALSO generic; a survey that names a specialty
+    is covered by a live posting whose specialty is a superset. So a firm's general program drops its
+    generic placeholder (Morrison Foerster, Foley & Lardner) and matches a named one (Wetmore
+    Fellowship), while a distinct general program is kept beside a niche-only live posting (Sidley's
+    general 2L vs its IP-Litigation 2L). City differences are handled by the office check in the caller."""
+    s, l = _dd_specialty(survey_rec, lvl), _dd_specialty(live_rec, lvl)
+    return (s <= l) if s else (not l)
 
 
 def _dd_open(rec, lvl):
@@ -1177,8 +1197,7 @@ def wire_summer_split(data: dict) -> None:
             if not _firm_match(k, lk):
                 continue
             for L in recs:
-                if (_dd_generic_dup(rec.get(f"{lvl} Position"), L.get(f"{lvl} Position"))
-                        and not _dd_offices_distinct(rec, L)):
+                if _dd_generic_dup(rec, L, lvl) and not _dd_offices_distinct(rec, L):
                     return True
         return False
     for row in direct_apply_rows():
