@@ -803,6 +803,7 @@ def wire_entry3l(data: dict) -> None:
 SUMMER_SQL = """
 SELECT j.ID AS job_id, o.NAME AS firm, j.TITLE AS position,
   j.OPEN_DATE AS open_date, j.CLOSE_DATE AS close_date, j.UPDATED_AT AS updated_at, j.CREATED_AT AS created_at,
+  j.IS_1L AS is_1l, j.IS_2L AS is_2l,
   EXISTS (SELECT 1 FROM FORWARD_JOB_GRAD_DATE_TARGET_RULE r WHERE r.JOB_ID=j.ID
           AND r.IS_NOT_DELETED=1 AND r.RULE_TYPE='INDIVIDUAL_YEARS' AND YEAR(r.MIN_GRAD_DATE)=2029) AS g1L,
   EXISTS (SELECT 1 FROM FORWARD_JOB_GRAD_DATE_TARGET_RULE r WHERE r.JOB_ID=j.ID
@@ -1070,6 +1071,11 @@ def _dedup_lateral(rows):
 _2L_OPEN_MIN_ENTRY = "2026-08-01"
 
 
+def _bit(v):
+    """Coerce a MySQL BIT / Metabase boolean cell (1, True, '1', 'true') to a Python bool."""
+    return v is True or v == 1 or str(v).strip().lower() == "true"
+
+
 def wire_summer_split(data: dict) -> None:
     rows = metabase_sql(MB_DB, SUMMER_SQL)
     # 2L tab carries two open cohorts: the active Class-of-2029 2L-summer cycle (open2029) and the
@@ -1082,15 +1088,22 @@ def wire_summer_split(data: dict) -> None:
     for r in rows:
         # Class comes from the Flo Forward grad-year TARGET field (g2L = grad-2028, g1L = grad-2029);
         # that's the backbone. Grad-year can't tell a class's 1L summer from its 2L summer (both carry
-        # the same grad year), so a "2L"/"2028" title token is the only tiebreaker that moves a Class-
-        # of-2029 role to its 2L summer. (level, class-grad-year) targets:
+        # the same grad year), so a "2L"/"2028" title token is the tiebreaker that moves a Class-of-
+        # 2029 role to its 2L summer. A role explicitly open to BOTH 1Ls and 2Ls (IS_1L & IS_2L both
+        # set, or a "1L/2L" dual title) belongs in BOTH tables, so it emits both targets (e.g. King &
+        # Spalding "1L/2L Dual Summer Associate", job 27437). (level, class-grad-year) targets:
         g1, g2 = int(r.get("g1L") or 0), int(r.get("g2L") or 0)
         _title = str(r.get("position") or "").lower()
+        is1Lish = bool(re.search(r"\b1l\b", _title))
         is2Lish = bool(re.search(r"\b2l\b", _title) or "2028" in _title)
+        dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish)
         targets = []
         if g1:
-            targets.append(("2L", 2029) if is2Lish else ("1L", 2029))
-        if g2 and not (g1 and is2Lish):   # a dual-target 2L-title role counts once, as Class of 2029
+            if dual:
+                targets += [("1L", 2029), ("2L", 2029)]   # open to both 1Ls and 2Ls -> both tables
+            else:
+                targets.append(("2L", 2029) if is2Lish else ("1L", 2029))
+        if g2 and not (g1 and (is2Lish or dual)):   # a 2L-title/dual grad-2029 role is already counted
             targets.append(("2L", 2028))
         if not targets:
             continue                       # targets neither 2028 nor 2029 -> not a 1L/2L Summer role
