@@ -995,13 +995,26 @@ def _dd_core_tokens(s):
 # with year tokens and the row's own city, so a plain summer-associate posting has an empty specialty).
 _DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd"}
 
+# US state / region tokens — location qualifiers, not practice specialties. A survey can name the
+# state ("Texas Summer Associate") while its office field lists only cities, so these must be stripped
+# too or the state survives as a phantom specialty and blocks the dedup.
+_DD_STATES = {
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware",
+    "florida", "georgia", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky",
+    "louisiana", "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi",
+    "missouri", "montana", "nebraska", "nevada", "ohio", "oklahoma", "oregon", "pennsylvania",
+    "tennessee", "texas", "utah", "vermont", "virginia", "washington", "wisconsin", "wyoming",
+    "hampshire", "jersey", "mexico", "carolina", "dakota", "rhode", "dc", "national", "nationwide",
+    "remote", "usa",
+}
+
 
 def _dd_specialty(rec, lvl):
     """The tokens that make a posting DISTINCT — its practice group or program name. Drops generic
     breadth words, universal role/level words, year tokens, and the row's own city/office tokens (the
     office is compared separately). A plain summer-associate posting reduces to {} ; only a real
     specialty remains ("ip"/"litigation", "patent", a named fellowship like "wetmore")."""
-    toks = _dd_core_tokens(rec.get(f"{lvl} Position")) - _DD_ROLE
+    toks = _dd_core_tokens(rec.get(f"{lvl} Position")) - _DD_ROLE - _DD_STATES
     toks = {t for t in toks if not re.fullmatch(r"20\d\d", t)}
     off = str(rec.get("Office Location", "")).strip()
     if off and off != "—":
