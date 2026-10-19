@@ -2094,11 +2094,14 @@ class Component extends DCLogic {
     const isSplitApply = is1L || is2L;
     const splitColumns = (is2L ? sub.columns2L : sub.columns) || [];
     // Search filters Employer (cell 1), 1L/2L Position (cell 4), and Office Location (cell 5).
-    const q = (this.state.search || '').trim().toLowerCase();
+    // Normalize for search: lowercase and drop punctuation/whitespace so "omelveny" matches
+    // "O'Melveny" and "fish richardson" matches "Fish & Richardson". Applied to query AND cell text.
+    const sq = (s) => String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const q = sq(this.state.search);
     const hasQuery = q.length > 0;
     const matchRow = (r) => {
       if (!q) return true;
-      return [1, 4, 5].some((i) => { const c = r.cells[i]; return c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1; });
+      return [1, 4, 5].some((i) => { const c = r.cells[i]; return c && c.text && sq(c.text).indexOf(q) !== -1; });
     };
     // Sort by clicked column (localeCompare with numeric so dates/numbers order correctly).
     const sc = this.state.sortCol;
@@ -2203,7 +2206,7 @@ class Component extends DCLogic {
     // Rows now come from DATA (values); presentation applied here — Last updated (15) muted, links auto, em-dash → muted.
     const campusRowsAll = buildRows(DATA.tables.campus, campusColLabels, { muted: { 15: true } });
     const campusNoMatch = 'No matches for “' + this.state.search.trim() + '” — try a school, program, or class.';
-    const campusMatch = (r) => { if (!q) return true; return [0, 1, 3].some((i) => { const c = r.cells[i]; return c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1; }); };
+    const campusMatch = (r) => { if (!q) return true; return [0, 1, 3].some((i) => { const c = r.cells[i]; return c && c.text && sq(c.text).indexOf(q) !== -1; }); };
     const campusRows = sortRows(campusRowsAll.filter(campusMatch));
     const campusColumns = campusColLabels.map((label, i) => ({
       label,
@@ -2231,7 +2234,7 @@ class Component extends DCLogic {
     // Wide free-text columns wrap + clamp to 2 lines with an ellipsis (full text in the row detail sheet):
     // the grade/exam availability columns wrap, the long Career-Services notes use the muted desc clamp.
     const examsRowsAll = buildRows(DATA.tables.exams, examsColLabels, { wraps: { 1: true, 2: true, 4: true, 5: true }, desc: { 3: true, 6: true }, muted: { 7: true } });
-    const examsMatch = (r) => { if (!q) return true; const c = r.cells[0]; return !!(c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1); };
+    const examsMatch = (r) => { if (!q) return true; const c = r.cells[0]; return !!(c && c.text && sq(c.text).indexOf(q) !== -1); };
     const examsRows = sortRows(examsRowsAll.filter(examsMatch));
     const examsColumns = examsColLabels.map((label, i) => ({
       label,
@@ -2260,7 +2263,7 @@ class Component extends DCLogic {
     const entry3lColLabels = ['Employer', 'Class', '3L Position', '3L Job Listing', 'Offices', 'Practices, If Specified', 'Bar Admission, If Required', 'Last updated'];
     const J = (id) => 'https://florecruit.com/v2/app/forward/jobs/' + id;
     const entry3lRowsAll = buildRows(DATA.tables.entry3l, entry3lColLabels, { muted: { 7: true }, firm: { 0: true } });
-    const entry3lMatch = (r) => { if (!q) return true; return [0, 2, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1); }); };
+    const entry3lMatch = (r) => { if (!q) return true; return [0, 2, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && sq(c.text).indexOf(q) !== -1); }); };
     wrapCols(entry3lRowsAll, [2, 4]); // wrap 3L Position + Offices
     const entry3lRows = sortRows(entry3lRowsAll.filter(entry3lMatch));
     entry3lRows.forEach((r, i) => { r.onOpen = () => this.setState({ rowOpen: i }); });
@@ -2306,7 +2309,7 @@ class Component extends DCLogic {
     const piOpenRowsAll = isPISummer ? piSummerOpen : isPIExtern ? piExternOpen : isPIAttorney ? piAttorneyOpen : [];
     const piPastRowsAll = isPISummer ? piSummerPast : isPIExtern ? piExternPast : isPIAttorney ? piAttorneyPast : [];
     wrapCols(piOpenRowsAll, [1, 3, 4]); wrapCols(piPastRowsAll, [1, 3, 4]); // wrap Job Title + Location(s) + Compensation
-    const piMatch = (r) => { if (!q) return true; return [0, 1, 3].some((i) => { const c = r.cells[i]; return !!(c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1); }); };
+    const piMatch = (r) => { if (!q) return true; return [0, 1, 3].some((i) => { const c = r.cells[i]; return !!(c && c.text && sq(c.text).indexOf(q) !== -1); }); };
     const piOpenRows = sortRows(piOpenRowsAll.filter(piMatch));
     const piPastRows = sortRows(piPastRowsAll.filter(piMatch));
     const piColumns = piColLabels.map((label, i) => ({
@@ -2348,7 +2351,7 @@ class Component extends DCLogic {
     const _pill = (t) => ({ text: t, isPill: true });
     const _tw = (t) => ({ text: t, isWrap: true }); // long text that wraps to ~2 lines instead of forcing horizontal scroll
     const lateralRowsAll = buildRows(DATA.tables.lateral, lateralColLabels, { wraps: { 2: true, 3: true }, desc: { 4: true }, pills: { 6: true }, muted: { 7: true } });
-    const lateralMatch = (r) => { if (!q) return true; return [0, 2, 3, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1); }); };
+    const lateralMatch = (r) => { if (!q) return true; return [0, 2, 3, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && sq(c.text).indexOf(q) !== -1); }); };
     const lateralRows = sortRows(lateralRowsAll.filter(lateralMatch));
     const lateralColumns = lateralColLabels.map((label, i) => ({
       label,
@@ -2376,7 +2379,7 @@ class Component extends DCLogic {
     // under this section's "post-judicial clerkship roles" header (Hannah 2026-09-11).
     const pcColLabels = ['Law Firm', 'Job Listing', 'Position', 'Offices', 'Job Description', 'Open Date', 'Last updated'];
     const pcRowsAll = buildRows(DATA.tables.pc, pcColLabels, { wraps: { 2: true, 3: true }, desc: { 4: true }, muted: { 6: true } });
-    const pcMatch = (r) => { if (!q) return true; return [0, 2, 3, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && String(c.text).toLowerCase().indexOf(q) !== -1); }); };
+    const pcMatch = (r) => { if (!q) return true; return [0, 2, 3, 4].some((i) => { const c = r.cells[i]; return !!(c && c.text && sq(c.text).indexOf(q) !== -1); }); };
     const pcRows = sortRows(pcRowsAll.filter(pcMatch));
     const pcColumns = pcColLabels.map((label, i) => ({
       label,
