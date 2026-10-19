@@ -1009,12 +1009,23 @@ _DD_STATES = {
 }
 
 
+def _dd_firm_acronym(name):
+    """Initials of the firm's significant words, e.g. 'Robinson Bradshaw' -> 'rb' — firms often put
+    their own initials in a title ('RB Summer Associate') and that's not a specialty."""
+    words = [w for w in re.findall(r"[a-z0-9]+", (name or "").lower())
+             if w not in _DD_STOP and not _DD_FIRM_SUFFIX.fullmatch(w)]
+    return "".join(w[0] for w in words)
+
+
 def _dd_specialty(rec, lvl):
     """The tokens that make a posting DISTINCT — its practice group or program name. Drops generic
-    breadth words, universal role/level words, year tokens, and the row's own city/office tokens (the
-    office is compared separately). A plain summer-associate posting reduces to {} ; only a real
-    specialty remains ("ip"/"litigation", "patent", a named fellowship like "wetmore")."""
-    toks = _dd_core_tokens(rec.get(f"{lvl} Position")) - _DD_ROLE - _DD_STATES
+    breadth words, universal role/level words, year tokens, US states, the firm's own name/initials,
+    and the row's own city/office tokens (the office is compared separately). A plain summer-associate
+    posting reduces to {} ; only a real specialty remains ("ip"/"litigation", "patent", a named
+    fellowship like "wetmore")."""
+    firm = rec.get("Employer")
+    toks = _dd_core_tokens(rec.get(f"{lvl} Position")) - _DD_ROLE - _DD_STATES - _dd_title_tokens(firm)
+    toks.discard(_dd_firm_acronym(firm))
     toks = {t for t in toks if not re.fullmatch(r"20\d\d", t)}
     off = str(rec.get("Office Location", "")).strip()
     if off and off != "—":
