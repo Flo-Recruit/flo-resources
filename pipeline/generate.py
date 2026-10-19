@@ -984,6 +984,7 @@ _DD_GENERIC = {
     "practice", "practices", "area", "areas", "group", "groups", "department", "departments",
     "position", "positions", "available", "availability", "opportunity", "opportunities",
     "opening", "openings", "program", "programs", "role", "roles", "track", "tracks",
+    "class", "classes", "candidate", "candidates",   # boilerplate ("JD Class of 2029", "candidates")
 }
 
 
