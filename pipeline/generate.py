@@ -1115,6 +1115,16 @@ def _dedup_lateral(rows):
 # Roll forward ~1 year each recruiting cycle alongside the grad-year targets.
 _2L_OPEN_MIN_ENTRY = "2026-08-01"
 
+# Manual exceptions: live "Summer Associate" jobs that ARE open to both 1Ls and 2Ls (Class of 2029)
+# but whose listing never set IS_2L / a dual title, so the pipeline would file them 1L-only. Listing
+# them here forces dual so they post in BOTH the 1L and 2L tables with the live Apply link (and their
+# generic 2L survey placeholders dedupe). Remove an id once the firm sets the role dual at the source.
+_DUAL_OVERRIDE = {
+    26896,          # Robinson Bradshaw — "RB Summer Associate"
+    25258,          # Rothwell, Figg, Ernst & Manbeck — "IP Summer Associate (Class of 2029)"
+    27518, 27522,   # Weil, Gotshal & Manges — "Weil Summer Associate" (Multiple Offices / New York)
+}
+
 
 def _bit(v):
     """Coerce a MySQL BIT / Metabase boolean cell (1, True, '1', 'true') to a Python bool."""
@@ -1141,7 +1151,8 @@ def wire_summer_split(data: dict) -> None:
         _title = str(r.get("position") or "").lower()
         is1Lish = bool(re.search(r"\b1l\b", _title))
         is2Lish = bool(re.search(r"\b2l\b", _title) or "2028" in _title)
-        dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish)
+        dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish) \
+            or (str(r.get("job_id")) in {str(j) for j in _DUAL_OVERRIDE})
         targets = []
         if g1:
             if dual:
