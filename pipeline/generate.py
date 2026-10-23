@@ -111,8 +111,10 @@ _FIRM_PROFILE_KEYS = None
 # (abbreviations, rebrands) so the prefix fallbacks can't bridge them. Keys/values are matched after
 # _norm_firm normalization; the value must be a profile key that exists in firm-profiles.json.
 #   "Herbert Smith Freehills Kramer" (tracker) <-> "HSF Kramer" (profile, HSF = Herbert Smith Freehills)
+#   "BCLP" (tracker) <-> "Bryan Cave Leighton Paisner" (profile)
 _FIRM_PROFILE_ALIASES = {
     _norm_firm("Herbert Smith Freehills Kramer"): _norm_firm("HSF Kramer"),
+    _norm_firm("BCLP"): _norm_firm("Bryan Cave Leighton Paisner"),
 }
 
 # ── Forward tier gate ──
