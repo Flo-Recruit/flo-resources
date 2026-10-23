@@ -996,7 +996,9 @@ def _dd_core_tokens(s):
 
 # Universal role/level words that don't distinguish one summer posting from another (stripped, along
 # with year tokens and the row's own city, so a plain summer-associate posting has an empty specialty).
-_DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd"}
+# "dual" just says the role spans 1L & 2L (BCLP's "Dual 2027 1L & 2028 2L Summer Associate" survey vs
+# its live "2027 1L & 2028 2L Summer Associate (Multiple Offices)", Hannah 2026-10-23).
+_DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd", "dual"}
 
 # US state / region tokens — location qualifiers, not practice specialties. A survey can name the
 # state ("Texas Summer Associate") while its office field lists only cities, so these must be stripped
