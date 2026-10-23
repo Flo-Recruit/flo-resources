@@ -1227,15 +1227,26 @@ def wire_summer_split(data: dict) -> None:
         """True when this survey row just duplicates one of the firm's live postings at this level —
         a live row with a ~similar title (same generic role) AND no distinguishing city. A posting
         that differs by practice group (title) and/or city is NOT covered, so we post both (e.g.
-        Sidley's general 2L alongside its live IP-Litigation 2L)."""
+        Sidley's general 2L alongside its live IP-Litigation 2L).
+
+        A generic survey row that opens the SAME DAY as one of the firm's live practice-group postings
+        is also covered: the firm opened its program as those per-group postings (Sterne Kessler's
+        "Summer Associate for Class of 2029/2030" on 10/14 vs its live Electronics / Mechanical & Design
+        / Trial & Appellate postings that day, Hannah 2026-10-23). A different open date still keeps it
+        (Sidley's general 2L opens 11/1, after its IP-Litigation posting)."""
         k = _dd_firm_key(rec.get("Employer"))
         if not k:
             return False
+        generic = not _dd_specialty(rec, lvl)
         for lk, recs in _cycle_live.get(lvl, {}).items():
             if not _firm_match(k, lk):
                 continue
             for L in recs:
-                if _dd_generic_dup(rec, L, lvl) and not _dd_offices_distinct(rec, L):
+                if _dd_offices_distinct(rec, L):
+                    continue
+                if _dd_generic_dup(rec, L, lvl):
+                    return True
+                if generic and _dd_open(rec, lvl) == _dd_open(L, lvl):
                     return True
         return False
     for row in direct_apply_rows():
