@@ -899,6 +899,7 @@ _DA_FIRM_NAMES = {
     "Munger, Tolles & Olson": "Munger, Tolles, & Olson LLP",
     "Milbank LLP": "Milbank",
     "Elsberg Baker & Maruri": "Elsberg Baker & Maruri PLLC",
+    "Cox, Castle & Nicholson": "Cox, Castle & Nicholson LLP",
 }
 
 
