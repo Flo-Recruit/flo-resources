@@ -888,6 +888,20 @@ def _window_class(level: str, open_iso) -> int | None:
     return ry + {"1L": 3, "2L": 2, "3L": 1}[level]
 
 
+# Survey employer name -> the firm's name on Flo Forward, so a firm's survey rows read the same as its
+# live postings (Hannah 2026-10-26: "Covington & Burling" vs Forward's "Covington & Burling LLP"). Add a firm
+# here when its survey spelling differs from Forward.
+_DA_FIRM_NAMES = {
+    "Covington & Burling": "Covington & Burling LLP",
+    "White & Case": "White & Case LLP",
+    "Mayer Brown": "Mayer Brown LLP",
+    "Jones Walker": "Jones Walker LLP",
+    "Munger, Tolles & Olson": "Munger, Tolles, & Olson LLP",
+    "Milbank LLP": "Milbank",
+    "Elsberg Baker & Maruri": "Elsberg Baker & Maruri PLLC",
+}
+
+
 def direct_apply_rows() -> list[dict]:
     """Approved Direct-Apply survey records, exploded into one row per populated level."""
     fields = [DA_STATUS, DA_EMP, DA_JOBID, DA_GY] + [f for L in DA_LEVELS.values() for f in L if f]
@@ -907,7 +921,7 @@ def direct_apply_rows() -> list[dict]:
             out.append({
                 "level": lvl,
                 "class": years[0] if years else _window_class(lvl, open_iso),  # earliest targeted class
-                "firm": (f.get(DA_EMP) or "").strip() or "—",
+                "firm": _DA_FIRM_NAMES.get((f.get(DA_EMP) or "").strip(), (f.get(DA_EMP) or "").strip()) or "—",
                 "position": str(pos).strip(),
                 "open_iso": open_iso,
                 "close_iso": f.get(close_f) if close_f else None,
