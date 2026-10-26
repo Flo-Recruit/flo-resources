@@ -2219,6 +2219,9 @@ def wire_overview_stats(data: dict) -> None:
         _lat_tiles.append({"label": "Top grad year targeted", "value": f"Class of {_top_g[0]}", "sub": "most-targeted year"})
     if _lat_tiles:
         ov["cards"].setdefault("lateralassoc", {})["stats"] = _lat_tiles
+        # The lateral page HEADER reads headerStats.lateralassoc, which was never re-wired and still
+        # showed a stale snapshot (e.g. "Litigation · 31%"). Mirror the live card tiles so they agree.
+        ov["headerStats"]["lateralassoc"] = [{**s, "isText": True} for s in _lat_tiles]
 
     lf = metabase_sql(MB_DB, LAWFIRM_STATS_SQL)[0]
     # current counts come from the table-derived flow (exact match to the visible table);

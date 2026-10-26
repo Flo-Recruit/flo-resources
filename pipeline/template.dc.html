@@ -446,12 +446,11 @@
                       <div style="font-size:10.5px;color:#B0A99F;">Candidate source · past 12 mo</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:18px;">
-                      <svg width="92" height="92" viewBox="0 0 96 96" style="flex-shrink:0;display:block;"><g transform="rotate(-90 48 48)"><circle cx="48" cy="48" r="38" fill="none" stroke="#192B92" stroke-width="15" stroke-dasharray="90.01 148.75" stroke-dashoffset="-0.00"></circle><circle cx="48" cy="48" r="38" fill="none" stroke="#4DA54C" stroke-width="15" stroke-dasharray="56.08 182.68" stroke-dashoffset="-91.51"></circle><circle cx="48" cy="48" r="38" fill="none" stroke="#4D8EFF" stroke-width="15" stroke-dasharray="55.71 183.05" stroke-dashoffset="-149.09"></circle><circle cx="48" cy="48" r="38" fill="none" stroke="#C9CEDA" stroke-width="15" stroke-dasharray="30.96 207.80" stroke-dashoffset="-206.30"></circle></g><text x="48" y="51" text-anchor="middle" font-size="8.5" font-weight="700" letter-spacing="0.08em" fill="#9A948C" font-family="Zalando Sans,sans-serif">OFFERS</text></svg>
+                      {{ ovLaOfferDonut }}
                       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;font-size:12.5px;">
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#192B92;flex-shrink:0;"></span><span style="color:#3B3D44;">Agency</span><span style="margin-left:auto;font-weight:600;color:#290A1B;">38%</span></div>
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#4DA54C;flex-shrink:0;"></span><span style="color:#3B3D44;">Referral</span><span style="margin-left:auto;font-weight:600;color:#290A1B;">24%</span></div>
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#4D8EFF;flex-shrink:0;"></span><span style="color:#3B3D44;">Write-in</span><span style="margin-left:auto;font-weight:600;color:#290A1B;">24%</span></div>
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#C9CEDA;flex-shrink:0;"></span><span style="color:#8A857C;">Other</span><span style="margin-left:auto;font-weight:600;color:#8A857C;">14%</span></div>
+                        <sc-for list="{{ ovLaOffers }}" as="o" hint-placeholder-count="5">
+                        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:{{ o.color }};flex-shrink:0;"></span><span style="color:#3B3D44;">{{ o.label }}</span><span style="margin-left:auto;font-weight:600;color:#290A1B;">{{ o.pct }}</span></div>
+                        </sc-for>
                       </div>
                     </div>
                   </div>
@@ -3112,8 +3111,32 @@ class Component extends DCLogic {
     // Deferred (regenerated when their live source is wired, same as the market charts): the 3 card sparklines and
     // the Lateral Non-Partner card donut — both computed SVGs sharing a source with the market dashboard.
     const OV = DATA.overview.cards;
+    // "Where offers come from" donut — driven from the SAME market-dashboard source data
+    // (DATA.charts.lateral.source at the offer stage) so this card and the Market Data tab always agree.
+    // Was previously hardcoded markup (stale Agency 38 / Referral 24 / Write-in 24 / Other 14).
+    const _laOfferDonut = (function () {
+      const src = ((DATA.charts.lateral || {}).source) || [];
+      const segs = src.map((c) => ({ label: c.label, color: c.color, v: (c.v && c.v.offer) || 0 }))
+        .filter((s) => s.v > 0).sort((a, b) => b.v - a.v);
+      const tot = segs.reduce((s, x) => s + x.v, 0) || 1;
+      const C = 2 * Math.PI * 38;
+      let off = 0;
+      const circles = segs.map((s, i) => {
+        const dash = C * s.v / tot;
+        const el = e('circle', { key: 'o' + i, cx: 48, cy: 48, r: 38, fill: 'none', stroke: s.color, strokeWidth: 15, strokeDasharray: dash.toFixed(2) + ' ' + (C - dash).toFixed(2), strokeDashoffset: (-off).toFixed(2) });
+        off += dash;
+        return el;
+      });
+      const svg = e('svg', { width: 92, height: 92, viewBox: '0 0 96 96', style: { flexShrink: 0, display: 'block' } },
+        e('g', { transform: 'rotate(-90 48 48)' }, circles),
+        e('text', { x: 48, y: 51, textAnchor: 'middle', fontSize: 8.5, fontWeight: 700, letterSpacing: '0.08em', fill: '#9A948C', fontFamily: 'Zalando Sans,sans-serif' }, 'OFFERS'));
+      // Legend mirrors the Market Data tab's top rows (Agency / Write-in / Referral / Other / None).
+      const legend = segs.slice(0, 5).map((s) => ({ label: s.label, color: s.color, pct: Math.round(s.v / tot * 100) + '%' }));
+      return { svg: svg, legend: legend };
+    })();
     return {
       ov: OV,
+      ovLaOfferDonut: _laOfferDonut.svg, ovLaOffers: _laOfferDonut.legend,
       ovLfMonthVal: OV.lawfirm.stats[0].value, ovLfMonthDelta: OV.lawfirm.stats[0].delta, ovLfMonthVs: OV.lawfirm.stats[0].vs,
       ovLfMonthShowDelta: !!OV.lawfirm.stats[0].delta && OV.lawfirm.stats[0].delta.charAt(0) !== '-',
       ovLfSeasonVal: OV.lawfirm.stats[1].value, ovLfSeasonDelta: OV.lawfirm.stats[1].delta, ovLfSeasonVs: OV.lawfirm.stats[1].vs,
