@@ -780,7 +780,9 @@ def wire_entry3l(data: dict) -> None:
     # of 2027)" (Flo Forward job 27362). Not a rule — a single id drop; remove this entry if the listing
     # should ever come back. (Dropping the live row is enough: its Airtable survey twin is already
     # suppressed upstream by the same job id / title, so no "Not yet open" placeholder reappears.)
-    _DROP_JOB_IDS = ("27362",)
+    # Also Foley & Lardner "Entry-Level Insurance Associate- Chicago (2027)" (job 27491, Hannah
+    # 2026-10-26).
+    _DROP_JOB_IDS = ("27362", "27491")
 
     def _kept(rec):
         lk = rec.get("3L Job Listing")
