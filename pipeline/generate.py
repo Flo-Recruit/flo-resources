@@ -2409,6 +2409,22 @@ WIRED = [wire_public_interest, wire_campus_exams, wire_lateral, wire_pc, wire_en
 # to pick up newly-posted student jobs, not re-run every attorney/chart/overview query.
 WIRED_STUDENTS = [wire_entry3l, wire_summer_split]
 
+# Display-name overrides for the student job tables, for a firm whose Flo Forward jobs sit under more
+# than one org name. Applied after wiring, so dedupe and profile matching still see the source names.
+#   Winston Taylor: summer jobs post as "Winston Taylor LLP", the 3L job as "Winston Taylor"
+#   (Hannah 2026-10-26: show "Winston Taylor").
+_FIRM_DISPLAY_NAMES = {
+    "Winston Taylor LLP": "Winston Taylor",
+}
+
+
+def apply_firm_display_names(tables: dict) -> None:
+    for key in ("summer1L", "summer2L", "entry3l"):
+        t = tables.get(key)
+        for rows in (t.values() if isinstance(t, dict) else [t or []]):
+            for rec in rows:
+                rec["Employer"] = _FIRM_DISPLAY_NAMES.get(rec.get("Employer"), rec.get("Employer"))
+
 
 def main(argv=None) -> None:
     argv = argv or []
@@ -2419,6 +2435,7 @@ def main(argv=None) -> None:
     print(f"loaded snapshot; wiring {len(wired)} live section(s)" + (" [students-only]" if students_only else ""))
     for fn in wired:
         fn(data)
+    apply_firm_display_names(data.get("tables", {}))
     stamp_last_updated(data.get("tables", {}), prev_tables)    # per-row "Last updated" date (add/edit detection)
     stamp_last_updated_at(data.get("tables", {}), prev_tables)  # per-row "_luAt" datetime for the detail-view time
     data.setdefault("meta", {})["generatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
