@@ -781,8 +781,9 @@ def wire_entry3l(data: dict) -> None:
     # should ever come back. (Dropping the live row is enough: its Airtable survey twin is already
     # suppressed upstream by the same job id / title, so no "Not yet open" placeholder reappears.)
     # Also Foley & Lardner "Entry-Level Insurance Associate- Chicago (2027)" (job 27491, Hannah
-    # 2026-10-26).
-    _DROP_JOB_IDS = ("27362", "27491")
+    # 2026-10-26). And Greenberg Glusker "Litigation Associate (Mid-Level)" (job 26940) and "Tax Associate
+    # (Mid-Level to Senior)" (job 26534): mid-level roles, not entry-level (Hannah 2026-10-27).
+    _DROP_JOB_IDS = ("27362", "27491", "26940", "26534")
 
     def _kept(rec):
         lk = rec.get("3L Job Listing")
