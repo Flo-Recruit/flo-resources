@@ -3040,7 +3040,7 @@ class Component extends DCLogic {
       // events and resume collects that the attorney fold would bury in "Other".
       const stuSrc = (DATA.charts.lawStudent.source || []).map((c) => ({ label: c.label, color: c.color, value: c.v[srcStage] }));
       const stuSrcTotal = stuSrc.reduce((s, it) => s + it.value, 0);
-      const stuStageLbl = srcStage === 'applied' ? 'Submitted (all candidates)' : srcStage === 'interview' ? 'Reached interview or beyond' : 'Reached offer or beyond';
+      const stuStageLbl = srcStage === 'applied' ? 'Submitted (all candidates)' : srcStage === 'interview' ? 'Reached interview or beyond' : 'Reached offer or beyond in Flo\'s ATS';
       const stuSourceChart = { title: 'Source of law student candidates on Flo', sub: stuStageLbl + ' · ' + rawFmt(stuSrcTotal) + ' candidates · applied since Jan 2025', svg: donutChart(stuSrc, stuSrcTotal, 'Candidates'), legend: [], hasStageToggle: true };
       marketCharts = [
         // order per Hannah 2026-08-17: accounts, firm views, outreach, networking, event regs, postings, app subs
