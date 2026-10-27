@@ -621,8 +621,8 @@ const PROMPTS = [
   "slug": "spot-cross-posting-overlaps",
   "title": "Spot cross-posting overlaps",
   "prompt": "Show me law students who applied to more than one office or class year, and where the overlaps are across our applications.",
-  "category": "Lateral non-partner and partner hiring",
-  "theme": "Where the pipeline stands",
+  "category": "Entry-level hiring",
+  "theme": "Interest and follow-up lists",
   "jobs": [
    "Find people or records"
   ],
@@ -647,8 +647,8 @@ const PROMPTS = [
   "slug": "filter-on-application-question-answers",
   "title": "Filter on application question answers",
   "prompt": "Show me all candidates who selected [Office] as their office location interest.",
-  "category": "Entry-level hiring",
-  "theme": "Interest and follow-up lists",
+  "category": "Lateral non-partner and partner hiring",
+  "theme": "Look up a candidate",
   "jobs": [
    "Find people or records"
   ],
@@ -890,8 +890,8 @@ const PROMPTS = [
   "slug": "track-the-evolution-of-your-law-student-recruitment",
   "title": "Track the evolution of your law student recruitment",
   "prompt": "Show me how our law student recruiting has shifted over the past few years: job open dates, application source, interview timing, and offer and acceptance rates.",
-  "category": "Lateral non-partner and partner hiring",
-  "theme": "Speed, timing, and trends",
+  "category": "Entry-level hiring",
+  "theme": "What events and schools produce",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2069,7 +2069,7 @@ const PROMPTS = [
   "title": "Send performance signal back to recruiting",
   "prompt": "What performance trends should we be bringing back to the recruiting team to inform how they evaluate candidates?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Hire to performance",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2081,7 +2081,7 @@ const PROMPTS = [
   "title": "Look across recruiting and performance evaluations",
   "prompt": "Do our interview evaluations and performance reviews touch on similar behavioral and technical skills? Outline the overlap and differences.",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Hire to performance",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2093,7 +2093,7 @@ const PROMPTS = [
   "title": "Compare two law schools, from recruiting to performance",
   "prompt": "Compare [School A] and [School B] for our student hiring: offers, acceptances, and how those hires have performed since.",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Hire to performance",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2108,7 +2108,7 @@ const PROMPTS = [
   "title": "Find flight risk",
   "prompt": "Which [Attorneys/Professionals] show signals worth a check-in: low or declining review ratings, thin self-reviews, or feedback themes suggesting disengagement? Label each as a signal rather than a prediction.",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Retention risk",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2123,7 +2123,7 @@ const PROMPTS = [
   "title": "Compare groups directly",
   "prompt": "Compare review themes, especially regarding workload and rigor, between [Practice Group A] and [Practice Group B].",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Growth and recognition",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2139,7 +2139,7 @@ const PROMPTS = [
   "title": "Find what your stayers share",
   "prompt": "What do our longest-tenured [Attorneys/Professionals] have in common, based on start date, work history, education history, and feedback themes?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Retention risk",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2153,7 +2153,7 @@ const PROMPTS = [
   "title": "Look for early warning language",
   "prompt": "Which recent review comments contain language suggesting disengagement or uncertainty about staying?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Retention risk",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2165,7 +2165,7 @@ const PROMPTS = [
   "title": "Get the full department picture",
   "prompt": "Give me a summary of activity in [Department] across recruiting and performance cycles.",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Big questions",
   "jobs": [
    "Check where things stand"
   ],
@@ -2180,7 +2180,7 @@ const PROMPTS = [
   "title": "Pose your biggest questions",
   "prompt": "What should I be worried about right now across our talent data?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Big questions",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2192,7 +2192,7 @@ const PROMPTS = [
   "title": "Look for patterns people would miss",
   "prompt": "What patterns are emerging in our talent data that humans might miss?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Big questions",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2204,7 +2204,7 @@ const PROMPTS = [
   "title": "Ask what changed",
   "prompt": "What changed since last year across recruiting and performance?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Big questions",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2216,7 +2216,7 @@ const PROMPTS = [
   "title": "Find who deserves recognition",
   "prompt": "Which [Department] professionals should receive special recognition this year based on their reviews?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Growth and recognition",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2231,7 +2231,7 @@ const PROMPTS = [
   "title": "Name the top risks",
   "prompt": "Suggest the five biggest talent risks in the firm right now, with the evidence behind each one.",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Retention risk",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2243,7 +2243,7 @@ const PROMPTS = [
   "title": "Explore areas of impact",
   "prompt": "If we changed only one thing about our talent strategy this year, what would have the biggest impact?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Big questions",
   "jobs": [
    "Compare or spot a pattern"
   ],
@@ -2255,12 +2255,68 @@ const PROMPTS = [
   "title": "Find growth to celebrate",
   "prompt": "Which practice group is improving the fastest, based on review ratings and feedback themes across cycles?",
   "category": "Firm-wide talent strategy",
-  "theme": "",
+  "theme": "Growth and recognition",
   "jobs": [
    "Compare or spot a pattern"
   ],
   "vars": [],
   "req": "Pro tip: keep practice area filled in on employee records."
+ },
+ {
+  "n": 151,
+  "slug": "find-candidates-already-in-your-history",
+  "title": "Find candidates already in your history",
+  "prompt": "Which candidates appear in both my candidate list and my historical data? Match them by email address.",
+  "category": "Lateral non-partner and partner hiring",
+  "theme": "Look up a candidate",
+  "jobs": [
+   "Find people or records"
+  ],
+  "vars": [],
+  "req": "Requires past candidate records imported into your Historical Data table."
+ },
+ {
+  "n": 152,
+  "slug": "see-which-past-candidates-are-applying-again",
+  "title": "See which past candidates are applying again",
+  "prompt": "Have any candidates in my historical records applied to a job that's currently in the ATS?",
+  "category": "Lateral non-partner and partner hiring",
+  "theme": "Look up a candidate",
+  "jobs": [
+   "Find people or records"
+  ],
+  "vars": [],
+  "req": "Requires past candidate records imported into your Historical Data table."
+ },
+ {
+  "n": 153,
+  "slug": "revisit-concerns-from-past-feedback",
+  "title": "Revisit concerns from past feedback",
+  "prompt": "Which candidates in my historical data have a feedback response to [Any concerns about fit with the practice group]? Include the last job each one applied to and the status of that job.",
+  "category": "Lateral non-partner and partner hiring",
+  "theme": "Look up a candidate",
+  "jobs": [
+   "Find people or records"
+  ],
+  "vars": [
+   "[Any concerns about fit with the practice group]"
+  ],
+  "req": "Requires past candidate records imported into your Historical Data table."
+ },
+ {
+  "n": 154,
+  "slug": "search-notes-from-your-previous-system",
+  "title": "Search notes from your previous system",
+  "prompt": "Looking at the notes field in my historical data, which candidates have [a dual degree]? Include the note for each one.",
+  "category": "Lateral non-partner and partner hiring",
+  "theme": "Look up a candidate",
+  "jobs": [
+   "Find people or records"
+  ],
+  "vars": [
+   "[a dual degree]"
+  ],
+  "req": "Requires past candidate records imported into your Historical Data table."
  }
 ];
 
@@ -2279,23 +2335,28 @@ const THEMES = {
   "Recurring reporting"
  ],
  "Entry-level hiring": [
-  "Run an event",
-  "Who you met",
   "Interest and follow-up lists",
   "What events and schools produce",
   "Interview logistics",
   "Student screening",
+  "Run an event",
+  "Who you met",
   "The summer program"
  ],
  "Reviews and development": [
   "Run the cycle",
   "Write and check a review",
-  "Reviewer patterns and calibration",
   "Development themes and training",
+  "Reviewer patterns and calibration",
   "One person's record",
   "Performance decisions"
  ],
- "Firm-wide talent strategy": []
+ "Firm-wide talent strategy": [
+  "Hire to performance",
+  "Retention risk",
+  "Growth and recognition",
+  "Big questions"
+ ]
 };
 
 const JOBS = ["Find people or records","Check where things stand","Compare or spot a pattern","Chase or follow up","Draft something"];
