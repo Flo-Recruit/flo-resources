@@ -3035,6 +3035,13 @@ class Component extends DCLogic {
       const sSub = t ? 'Top-15 schools · monthly' : 'All schools · monthly';
       const chart = (id, title, sub, series, yFix, ax) => ({ title, sub, svg: lineChart(series, id, yFix, ax), legend: series.map((s) => ({ label: s.label, color: s.color })) });
       const MO_JUL = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      // Candidate-source donut — the student counterpart to the lateral/partner source charts. Shares the
+      // Submitted/Interview/Offer toggle via srcStage. The student fold surfaces OCI, Flo Forward, recruiting
+      // events and resume collects that the attorney fold would bury in "Other".
+      const stuSrc = (DATA.charts.lawStudent.source || []).map((c) => ({ label: c.label, color: c.color, value: c.v[srcStage] }));
+      const stuSrcTotal = stuSrc.reduce((s, it) => s + it.value, 0);
+      const stuStageLbl = srcStage === 'applied' ? 'Submitted (all candidates)' : srcStage === 'interview' ? 'Reached interview or beyond' : 'Reached offer or beyond';
+      const stuSourceChart = { title: 'Source of law student candidates on Flo', sub: stuStageLbl + ' · ' + rawFmt(stuSrcTotal) + ' candidates · applied since Jan 2025', svg: donutChart(stuSrc, stuSrcTotal, 'Candidates'), legend: [], hasStageToggle: true };
       marketCharts = [
         // order per Hannah 2026-08-17: accounts, firm views, outreach, networking, event regs, postings, app subs
         chart('accounts', 'Flo Forward account creation', 'Cumulative by graduating class · recruiting year Jul–Jun', mk(D.accounts, GY, GYC), null, MO_JUL),
@@ -3050,6 +3057,8 @@ class Component extends DCLogic {
         chart('appsubs', 'Flo Forward law student application submissions', 'Tracked via ATS and "I applied" on Flo Forward · monthly', mkSA(D.appsubs, SY, SYC)),
         chart('offers', 'Law student candidates moved to Offer', "Reached the Offer stage in Flo's ATS · monthly", mkSA(D.offers_student || {}, SY, SYC)),
         chart('hired', 'Law student candidates moved to Hired', "Reached the Hired stage in Flo's ATS · monthly", mkSA(D.hired_student || {}, SY, SYC)),
+        // Candidate source — donut with Submitted/Interview/Offer toggle, at the bottom of the tab
+        stuSourceChart,
       ];
       }
     }

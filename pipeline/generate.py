@@ -1538,6 +1538,18 @@ _SRC_FOLD = ("""CASE WHEN source='Write-in' THEN 'Write-in' WHEN source='Agency'
   WHEN source='Direct Outreach' THEN 'Direct Outreach'
   WHEN source='Advertisement/Job Board' THEN 'Advertisement/Job Board'
   WHEN source='None' THEN 'None' ELSE 'Other' END""")
+# Law-student fold: students barely use agencies, so the attorney fold would bury the campus/platform
+# channels (Flo Forward, OCI, Pre-OCI, Recruiting Event, Resume Collect) — their whole story — in "Other".
+# This surfaces those as their own slices; everything small/unlisted still folds to "Other".
+_STUDENT_SRC_FOLD = ("""CASE WHEN source='Write-in' THEN 'Write-in'
+  WHEN source='Forward' THEN 'Flo Forward'
+  WHEN source='Recruiting Event' THEN 'Recruiting Event'
+  WHEN source='OCI' THEN 'OCI'
+  WHEN source='Resume Collect' THEN 'Resume Collect'
+  WHEN source='Pre-OCI' THEN 'Pre-OCI'
+  WHEN source IN ('Referral','Employee Referral') THEN 'Referral'
+  WHEN source='Advertisement/Job Board' THEN 'Advertisement/Job Board'
+  ELSE 'Other' END""")
 SRC_DEMO = ("4,48,55,84,93,189,190,238,251,323,324,346,357,409,451,452,464,477,482,484,486,520,522,523,"
             "525,526,538,543,549,550,569,585,586,594,669,673,675,679,682,684,685,699,764,767,790,798,828,"
             "834,840,891,982,1003,1104,1268,1270,1276,1280,1338,1381,1387,1388,1391,1396,1411,1443,1464,"
@@ -1546,10 +1558,10 @@ SRC_DEMO = ("4,48,55,84,93,189,190,238,251,323,324,346,357,409,451,452,464,477,4
             "2582,2586,2590,2593,2597,2630,2643,2664,2665,2673,2678,2679,2686,2694,2700,2717,2727,2737,2738")
 
 
-def _source_funnel(jobtypes):
+def _source_funnel(jobtypes, fold=_SRC_FOLD):
     jt = ",".join(f"'{t}'" for t in jobtypes)
     rows = metabase_sql(67, f"""
-SELECT {_SRC_FOLD} AS cat, COUNT(DISTINCT candidate_id) AS applied,
+SELECT {fold} AS cat, COUNT(DISTINCT candidate_id) AS applied,
   COUNT(DISTINCT CASE WHEN {_INTERVIEW_COND} THEN candidate_id END) AS interview,
   COUNT(DISTINCT CASE WHEN {_OFFER_COND} THEN candidate_id END) AS offer
 FROM flocustomer.job_applications
@@ -2027,7 +2039,10 @@ GROUP BY yr, mo""")
     ls["offers_student"] = {f"{cy}-{cy+1}": cycle_series(oby, cy, 7) for cy in range(2023, 2027)}
     hby = {(int(float(r["yr"])), int(float(r["mo"]))): int(r["n"]) for r in metabase_sql(67, HIRED_STUDENT_SQL)}
     ls["hired_student"] = {f"{cy}-{cy+1}": cycle_series(hby, cy, 7) for cy in range(2023, 2027)}
-    print(f"  lawStudent charts: postings + appsubs + net_all + ls_all + accounts + outreach + lf + event_regs + firm_views + offers + hired")
+    # Candidate-source funnel (warehouse job_applications, job_type='Law Student', since Jan 2025) — the
+    # student counterpart to the lateral/partner source donuts, with the student-specific fold above.
+    ls["source"] = _apply_source(ls["source"], _source_funnel(("Law Student",), _STUDENT_SRC_FOLD))
+    print(f"  lawStudent charts: postings + appsubs + net_all + ls_all + accounts + outreach + lf + event_regs + firm_views + offers + hired + source")
 
 
 # ── OVERVIEW STAT TILES (runs last — derives from already-wired DATA.tables + a few flow
