@@ -12,6 +12,7 @@ on:
       - 'pipeline/**'
       - 'ai/**'
       - 'site/**'
+      - 'decksync/**'
       - '.github/workflows/verify-build.yml'
 
 permissions:
@@ -50,3 +51,6 @@ jobs:
             git diff --stat -- site/
             exit 1
           fi
+
+      - name: Deck slides still render from data.json
+        run: python3 decksync/run.py check --data pipeline/data.json
