@@ -61,6 +61,12 @@ jobs:
         working-directory: pipeline
         run: python3 build.py
 
+      # Non-blocking: a deck-render problem is surfaced as a warning but must never
+      # stop the tracker refresh. The daily decksync task reports the detail to Slack.
+      - name: Deck slides still render (warning only)
+        continue-on-error: true
+        run: python3 decksync/run.py check --data pipeline/data.json
+
       - name: Commit if changed
         run: |
           git config user.name "flo-tracker-bot"
