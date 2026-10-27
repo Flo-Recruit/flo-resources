@@ -1334,7 +1334,9 @@ def wire_summer_split(data: dict) -> None:
     # One-off removal (Hannah 2026-09-11): Cahill "Talent Profile - Class of 2029" (Flo Forward job
     # 25041) is an evergreen talent-intake profile, not a real 1L summer posting. Not a rule — a single
     # id drop; remove this entry if the source listing is ever taken down.
-    _DROP_JOB_IDS = ("25041",)
+    # Also Wolf Greenfield "Northeastern Co-op Application" (job 27914): an entry-level role that stays
+    # in the 3L table only, though Forward also targets it at the 2028 class (Hannah 2026-10-27).
+    _DROP_JOB_IDS = ("25041", "27914")
 
     def _kept(rec, lv):
         lk = rec.get(f"{lv} Job Listing")
