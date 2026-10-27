@@ -1144,6 +1144,7 @@ _DUAL_OVERRIDE = {
     26896,          # Robinson Bradshaw — "RB Summer Associate"
     25258,          # Rothwell, Figg, Ernst & Manbeck — "IP Summer Associate (Class of 2029)"
     27518, 27522,   # Weil, Gotshal & Manges — "Weil Summer Associate" (Multiple Offices / New York)
+    27913,          # Bricker Graydon — "2027 and 2028 Summer Associate Programs"
 }
 
 
