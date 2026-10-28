@@ -1005,6 +1005,7 @@ _DD_GENERIC = {
     "position", "positions", "available", "availability", "opportunity", "opportunities",
     "opening", "openings", "program", "programs", "role", "roles", "track", "tracks",
     "class", "classes", "candidate", "candidates",   # boilerplate ("JD Class of 2029", "candidates")
+    "application", "applications",                   # "… Summer Associate Application" (Freshfields)
 }
 
 
@@ -1146,6 +1147,7 @@ _DUAL_OVERRIDE = {
     25258,          # Rothwell, Figg, Ernst & Manbeck — "IP Summer Associate (Class of 2029)"
     27518, 27522,   # Weil, Gotshal & Manges — "Weil Summer Associate" (Multiple Offices / New York)
     27913,          # Bricker Graydon — "2027 and 2028 Summer Associate Programs"
+    27954,          # Freshfields — "2027 & 2028 Summer Associate"
 }
 
 
