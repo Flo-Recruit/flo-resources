@@ -3042,7 +3042,7 @@ class Component extends DCLogic {
       // events and resume collects that the attorney fold would bury in "Other".
       const stuSrc = (DATA.charts.lawStudent.source || []).map((c) => ({ label: c.label, color: c.color, value: c.v.applied }));
       const stuSrcTotal = stuSrc.reduce((s, it) => s + it.value, 0);
-      const stuSourceChart = { title: 'Source of law student candidates on Flo', sub: rawFmt(stuSrcTotal) + ' candidates · applied since Jan 2025', svg: donutChart(stuSrc, stuSrcTotal, 'Candidates'), legend: [] };
+      const stuSourceChart = { title: 'Source of law student applications on Flo Applicant Tracking', sub: rawFmt(stuSrcTotal) + ' law student candidates · applied on Flo\'s ATS since Jan 2025', svg: donutChart(stuSrc, stuSrcTotal, 'Candidates'), legend: [] };
       marketCharts = [
         // order per Hannah 2026-08-17: accounts, firm views, outreach, networking, event regs, postings, app subs
         chart('accounts', 'Flo Forward account creation', 'Cumulative by graduating class · recruiting year Jul–Jun', mk(D.accounts, GY, GYC), null, MO_JUL),
