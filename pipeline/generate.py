@@ -797,7 +797,8 @@ def wire_entry3l(data: dict) -> None:
 
 # ── 1L / 2L SUMMER SPLIT (Metabase db 2, LIVE) ───────────────────────────────
 # Law-student set (Law Student tag OR summer-ish title, minus lateral/partner/
-# paralegal/staff/3L guard). Level split by GRAD-TARGET YEAR (Hannah 2026-08-12):
+# paralegal/staff/3L guard; "partner" is whole-word so K&L Gates' "1L Power of Partnership Program",
+# job 27382, isn't dropped, Hannah 2026-10-28). Level split by GRAD-TARGET YEAR (Hannah 2026-08-12):
 # Summer 2027 is two different classes — 1L table = Class of 2029 (grad-target 2029),
 # 2L table = Class of 2028 (grad-target 2028). This is the reliable structured signal
 # (every open summer role carries a grad-target rule); title-token split was wrong
@@ -825,7 +826,7 @@ WHERE j.FORWARD_PUBLISHING_STATUS = 'PUBLISHED' AND j.DELETED_AT IS NULL
   AND (EXISTS (SELECT 1 FROM JOB_HIRING_TYPE jh JOIN HIRING_TYPE h ON h.ID=jh.HIRING_TYPE_ID
                WHERE jh.JOB_ID=j.ID AND h.NAME='Law Student')
        OR LOWER(j.TITLE) REGEXP 'summer associate|summer program|\\\\b1l\\\\b|\\\\b2l\\\\b|summer law|summer clerk|summer intern|summer fellow|summer scholar')
-  AND LOWER(j.TITLE) NOT REGEXP 'lateral|partner|paralegal|staff attorney|\\\\b3l\\\\b'
+  AND LOWER(j.TITLE) NOT REGEXP 'lateral|\\\\bpartners?\\\\b|paralegal|staff attorney|\\\\b3l\\\\b'
 ORDER BY j.OPEN_DATE DESC;""" % DEMO_REGEXP
 
 
@@ -1768,7 +1769,7 @@ WHERE j.DELETED_AT IS NULL
   AND (EXISTS (SELECT 1 FROM JOB_HIRING_TYPE jh JOIN HIRING_TYPE h ON h.ID=jh.HIRING_TYPE_ID WHERE jh.JOB_ID=j.ID AND h.NAME='Law Student')
        OR j.IS_1L=1 OR j.IS_2L=1
        OR LOWER(j.TITLE) REGEXP 'summer associate|summer program|\\\\b1l\\\\b|\\\\b2l\\\\b|summer law|summer clerk|summer intern|summer fellow')
-  AND LOWER(j.TITLE) NOT REGEXP 'lateral|partner|paralegal|staff attorney|\\\\b3l\\\\b'""" % DEMO_REGEXP
+  AND LOWER(j.TITLE) NOT REGEXP 'lateral|\\\\bpartners?\\\\b|paralegal|staff attorney|\\\\b3l\\\\b'""" % DEMO_REGEXP
 
 
 # appsubs = Metabase Q2509 "Forward Application Submissions" (native SQL extracted from
@@ -2068,7 +2069,7 @@ WHERE j.DELETED_AT IS NULL AND j.FORWARD_PUBLISHING_STATUS = 'PUBLISHED'
   AND j.JOB_CLASSIFICATION='LAW_FIRM' AND LOWER(o.NAME) NOT REGEXP '%s'
   AND (EXISTS (SELECT 1 FROM JOB_HIRING_TYPE jh JOIN HIRING_TYPE h ON h.ID=jh.HIRING_TYPE_ID WHERE jh.JOB_ID=j.ID AND h.NAME='Law Student')
        OR LOWER(j.TITLE) REGEXP 'summer associate|summer program|\\\\b1l\\\\b|\\\\b2l\\\\b|summer law|summer clerk|summer intern|summer fellow|summer scholar')
-  AND LOWER(j.TITLE) NOT REGEXP 'lateral|partner|paralegal|staff attorney|\\\\b3l\\\\b'
+  AND LOWER(j.TITLE) NOT REGEXP 'lateral|\\\\bpartners?\\\\b|paralegal|staff attorney|\\\\b3l\\\\b'
 """ % DEMO_REGEXP)
 
 PARTNER_12MO_SQL = f"""
