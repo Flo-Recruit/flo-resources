@@ -1,1 +1,1 @@
-{"permissions": {"allow": ["Bash(gh api -X PUT repos/hannahkellyflo/flo-resources/pulls/*/merge *)"]}}
+{"permissions": {"allow": ["Bash(gh api -X PUT repos/Flo-Recruit/flo-resources/pulls/*/merge *)"]}}

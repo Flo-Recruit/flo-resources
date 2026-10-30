@@ -1,6 +1,6 @@
 {
   "_about": "Which Claude artifacts decksync updates. 'own' slides are rebuilt from tracker data (slide id -> generator). 'patch' files only get numbers swapped (student count, HubSpot client stats). Add a deck or slide here; nothing else needs to change.",
-  "data_url": "https://raw.githubusercontent.com/hannahkellyflo/flo-resources/main/pipeline/data.json",
+  "data_url": "https://raw.githubusercontent.com/Flo-Recruit/flo-resources/main/pipeline/data.json",
   "_data_url_note": "Change this one line if the tracker repo moves or goes private (e.g. to https://resources.joinflo.com/charts.json).",
   "decks": [
     {"name": "Pipeline Building Demo: BigLaw", "url": "https://claude.ai/artifact/UnMiqv13N5cStbBxeYhTz4",
