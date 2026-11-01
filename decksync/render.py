@@ -628,18 +628,29 @@ def floor_500(n):
 
 NUM = r'\d{1,3}(?:,\d{3})+\+'
 
+# What can separate two words on a slide: spaces, line breaks, HTML tags, or &nbsp;.
+# Some slides lay "law students and new graduates" out across a line break, so the phrase
+# isn't contiguous in the source and has to be matched across this gap (Nov 2026 fix).
+_WS = r'(?:\s|<[^>]*>|&nbsp;)'
+
 
 def student_patches(ctx):
     """(regex, replacement) pairs applied to the text of existing slides/pages that quote the student count."""
     sc = student_counts(ctx)
     a0, a1 = sc['all_classes']
+    alln = floor_500(sc['all'])
     return [
-        (_re.compile(NUM + r' law students and (?:early career associates|new graduates)'), floor_500(sc['all']) + ' law students and new graduates'),
+        # contiguous "<N> law students and <early career associates|new graduates>": normalise wording and number
+        (_re.compile(NUM + r' law students and (?:early career associates|new graduates)'), alln + ' law students and new graduates'),
+        # same phrase split across a line break / tags: swap ONLY the number, so the "and new graduates"
+        # tail that already follows the break is kept rather than appended a second time
+        (_re.compile(NUM + r'(?=' + _WS + r'*law students' + _WS + r'+and (?:early career associates|new graduates))'), alln),
         # explicit 'current' claims keep the in-school count; any other 'law students' claim uses everyone (Hannah, Oct 26)
         (_re.compile(NUM + r' current law students'), floor_500(sc['current']) + ' current law students'),
-        (_re.compile(NUM + r' law students(?! and (?:early|new))'), floor_500(sc['all']) + ' law students and new graduates'),
+        # a bare 'law students' claim (not followed, even across a line break, by 'and early/new') gets the full phrase
+        (_re.compile(NUM + r' law students(?!' + _WS + r'*and (?:early|new))'), alln + ' law students and new graduates'),
         (_re.compile(r"n: '" + NUM + r"', d: 'students and grads joined from JD classes of [^,]+, [^,]+, and \d{4} use Flo Forward"),
-         f"n: '{floor_500(sc['all'])}', d: 'students and grads from JD classes of {a0}–{a1} use Flo Forward"),
+         f"n: '{alln}', d: 'students and grads from JD classes of {a0}–{a1} use Flo Forward"),
     ]
 
 
