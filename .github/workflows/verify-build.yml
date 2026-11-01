@@ -54,3 +54,6 @@ jobs:
 
       - name: Deck slides still render from data.json
         run: python3 decksync/run.py check --data pipeline/data.json
+
+      - name: Deck number patchers behave
+        run: python3 decksync/test_render.py
