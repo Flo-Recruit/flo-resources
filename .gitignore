@@ -8,7 +8,11 @@ __pycache__/
 .env
 .env.local
 
-# decksync: HubSpot client numbers live in the private "Deck Sync Settings" artifact,
-# never in this public repo; work/ is the scheduled task's scratch folder.
+# decksync: HubSpot client numbers and the top-25 school data live in the private
+# "Deck Sync Settings" artifact, never in this public repo; work/ is the scheduled
+# task's scratch folder.
 decksync/client_stats.json
+decksync/top25.json
+decksync/top25.py
+decksync/rows.json
 decksync/work/
