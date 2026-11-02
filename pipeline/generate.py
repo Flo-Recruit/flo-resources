@@ -1335,6 +1335,16 @@ def wire_summer_split(data: dict) -> None:
         # differs by practice group and/or city is kept — post both (Hannah 2026-10-15).
         if _covered_by_live(at_rec, lv):
             continue
+        # (3b) Its open date has arrived and the firm already has a live Class-of-2029 posting at EITHER
+        # level -> the firm's program is up on Flo Forward, so a "Not yet open" placeholder is stale even
+        # when the titles/offices/level don't line up (Kirkland's 2L survey row vs its live "Summer
+        # Associate Program (All U.S. Locations)", which routes to 1L; Milbank, Linklaters, Norton Rose).
+        # Before the open date, rule (3) still governs, so a firm's later-opening program keeps its row.
+        # (Elizabeth 2026-11-02.)
+        if (row.get("open_iso") and str(row["open_iso"])[:10] <= now.date().isoformat()
+                and any(_firm_match(_dd_firm_key(at_rec.get("Employer")) or "", lk)
+                        for lvl2 in ("1L", "2L") for lk in _cycle_live[lvl2])):
+            continue
         # (4) Exact duplicate already present. The Metabase guard stays firm+title (`seen`); among
         # Airtable survey rows, include the open date + offices (`seen_at`) so a firm that opens
         # different office groups on different dates under the SAME generic title (e.g. Winston &
