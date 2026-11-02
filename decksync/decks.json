@@ -12,6 +12,7 @@
     {"name": "Flo Forward Quarterly Business Review", "url": "https://claude.ai/artifact/FwAS8CMqXnxZNv9Qy7u2D2",
      "own": {"q05-activation": "accounts", "q06-reach": "reach_since_aug", "q09-applications": "apps"},
      "patch": ["project/slides/q08-firms.html"]},
+    {"name": "Flo Forward QBR & 2026 Renewal", "url": "https://claude.ai/artifact/NfreKgopWwd3o9g8wev6eA", "own": {"q06-reach": "reach_since_aug", "q09-applications": "apps"}, "patch": ["project/slides/q08-firms.html"]},
     {"name": "Flo Forward Pipeline Building for Judicial Clerks", "url": "https://claude.ai/artifact/WaB6c3ZWKqsMhi5vaDqDvD",
      "own": {"c09-interviews": "interviews_all"},
      "patch": ["project/slides/c03-litigation.html", "project/slides/c04-boutiques.html"]},
