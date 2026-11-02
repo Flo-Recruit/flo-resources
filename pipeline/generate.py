@@ -1370,12 +1370,6 @@ def wire_summer_split(data: dict) -> None:
         for bkt in out[lv]:
             out[lv][bkt] = _dedup_prefer_located(out[lv][bkt], lv)
 
-    # TEMP (Hannah 2026-08-31): Herbert Smith Freehills is reconsidering their 2L posting — hide the
-    # whole row until further notice. Remove this block once they confirm.
-    for bkt in out["2L"]:
-        out["2L"][bkt] = [rec for rec in out["2L"][bkt]
-                          if "herbert smith freehills" not in str(rec.get("Employer", "")).lower()]
-
     # One-off removal (Hannah 2026-09-11): Cahill "Talent Profile - Class of 2029" (Flo Forward job
     # 25041) is an evergreen talent-intake profile, not a real 1L summer posting. Not a rule — a single
     # id drop; remove this entry if the source listing is ever taken down.
