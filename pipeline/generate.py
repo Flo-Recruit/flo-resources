@@ -1018,7 +1018,9 @@ def _dd_core_tokens(s):
 # with year tokens and the row's own city, so a plain summer-associate posting has an empty specialty).
 # "dual" just says the role spans 1L & 2L (BCLP's "Dual 2027 1L & 2028 2L Summer Associate" survey vs
 # its live "2027 1L & 2028 2L Summer Associate (Multiple Offices)", Hannah 2026-10-23).
-_DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd", "dual"}
+# "first"/"second"/"1st"/"2nd"/"year" are the spelled-out level ("Second Year Summer Associate").
+_DD_ROLE = {"summer", "associate", "associates", "1l", "2l", "3l", "ll", "llm", "jd", "dual",
+            "first", "second", "1st", "2nd", "year"}
 
 # US state / region tokens — location qualifiers, not practice specialties. A survey can name the
 # state ("Texas Summer Associate") while its office field lists only cities, so these must be stripped
@@ -1175,8 +1177,10 @@ def wire_summer_split(data: dict) -> None:
         # Spalding "1L/2L Dual Summer Associate", job 27437). (level, class-grad-year) targets:
         g1, g2 = int(r.get("g1L") or 0), int(r.get("g2L") or 0)
         _title = str(r.get("position") or "").lower()
-        is1Lish = bool(re.search(r"\b1l\b", _title))
-        is2Lish = bool(re.search(r"\b2l\b", _title) or "2028" in _title)
+        # The level may be spelled out: "First Year"/"1st Year" = 1L, "Second Year"/"2nd Year" = 2L
+        # (Vinson & Elkins "Second Year Summer Associate - Multiple Offices", job 28098).
+        is1Lish = bool(re.search(r"\b1l\b|\b(?:first|1st)[\s-]+year\b", _title))
+        is2Lish = bool(re.search(r"\b2l\b|\b(?:second|2nd)[\s-]+year\b", _title) or "2028" in _title)
         dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish) \
             or (str(r.get("job_id")) in {str(j) for j in _DUAL_OVERRIDE})
         targets = []
