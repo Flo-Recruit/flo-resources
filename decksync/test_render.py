@@ -41,6 +41,11 @@ EXACT = [
                                 f'{ALL} law students and new graduates use Flo'),
     ('current claim',           '51,000+ current law students',
                                 f'{CUR} current law students'),
+    # Overview Packet stats data: matched in its original wording and in the wording the rule writes
+    ('packet stats, original',  "n: '51,000+', d: 'students and grads joined from JD classes of 2026, 2027, and 2028 use Flo Forward",
+                                f"n: '{ALL}', d: 'students and grads from JD classes of 2024–2028 use Flo Forward"),
+    ('packet stats, normalised', "n: '51,000+', d: 'students and grads from JD classes of 2026–2029 use Flo Forward",
+                                f"n: '{ALL}', d: 'students and grads from JD classes of 2024–2028 use Flo Forward"),
 ]
 
 
@@ -50,7 +55,7 @@ def main():
         got = patch(src)
         ok = got == want
         # invariant: a law-students claim must never end up with the tail twice
-        if 'current' not in src and got.count('new graduates') != 1:
+        if 'law students' in src and 'current' not in src and got.count('new graduates') != 1:
             ok = False
         print(f'  [{"ok" if ok else "FAIL":4}] {name:24} -> {" ".join(got.split())}')
         if not ok:

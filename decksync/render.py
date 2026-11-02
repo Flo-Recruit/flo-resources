@@ -649,7 +649,9 @@ def student_patches(ctx):
         (_re.compile(NUM + r' current law students'), floor_500(sc['current']) + ' current law students'),
         # a bare 'law students' claim (not followed, even across a line break, by 'and early/new') gets the full phrase
         (_re.compile(NUM + r' law students(?!' + _WS + r'*and (?:early|new))'), alln + ' law students and new graduates'),
-        (_re.compile(r"n: '" + NUM + r"', d: 'students and grads joined from JD classes of [^,]+, [^,]+, and \d{4} use Flo Forward"),
+        # packet stats data: the original "joined from JD classes of A, B, and C" wording, or the
+        # normalised "from JD classes of A–B" wording this rule writes, so later runs still match it
+        (_re.compile(r"n: '" + NUM + r"', d: 'students and grads (?:joined )?from JD classes of (?:[^,']+, [^,']+, and \d{4}|\d{4}–\d{4}) use Flo Forward"),
          f"n: '{alln}', d: 'students and grads from JD classes of {a0}–{a1} use Flo Forward"),
     ]
 
