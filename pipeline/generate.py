@@ -1168,6 +1168,7 @@ _DUAL_OVERRIDE = {
     27518, 27522,   # Weil, Gotshal & Manges — "Weil Summer Associate" (Multiple Offices / New York)
     27913,          # Bricker Graydon — "2027 and 2028 Summer Associate Programs"
     27954,          # Freshfields — "2027 & 2028 Summer Associate"
+    28152,          # Kirkland & Ellis — "Summer Associate Program (All U.S. Locations)" (Elizabeth 2026-11-02)
 }
 
 
