@@ -1201,6 +1201,13 @@ def wire_summer_split(data: dict) -> None:
         is2Lish = bool(re.search(r"\b2l\b|\b(?:second|2nd)[\s-]+year\b", _title) or "2028" in _title)
         dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish) \
             or (str(r.get("job_id")) in {str(j) for j in _DUAL_OVERRIDE})
+        # A title naming the 2028 SUMMER ("2028 Fried Frank Summer Associate", "2028 2L Summer Associate")
+        # is the Class of 2029's 2L summer, even when Forward targets grad-year 2028 — the Class of 2028
+        # spends its 2L summer in 2027. "Class of 2028" in the title is the grad year, not the summer,
+        # so it doesn't count (Morris Nichols "2027 2L Summer Associate (Class of 2028)").
+        # (Elizabeth 2026-11-02: Fried Frank jobs 26397/27608, Brooks Pierce.)
+        if g2 and not g1 and re.search(r"(?<!class of )\b2028\b", _title):
+            g1, g2, is2Lish = 2029, 0, True
         targets = []
         if g1:
             if dual:
