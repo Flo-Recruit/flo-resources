@@ -546,6 +546,20 @@ def strip_html(s) -> str:
     return s or "—"
 
 
+# Firms whose jobs are taken off the tracker entirely — every job table (1L/2L summer, 3L entry-level,
+# lateral, post-clerkship), on every refresh. Matched on the normalized firm name (_norm_firm), by
+# prefix, so "Weil, Gotshal & Manges LLP" and a bare "Weil" survey entry both match.
+#   Weil, Gotshal & Manges (Elizabeth 2026-11-02): the firm is dissolving — take down all its jobs.
+# Remove an entry to bring that firm's jobs back.
+_HIDDEN_FIRMS = ("weilgotshal",)
+_HIDDEN_FIRMS_EXACT = {"weil"}
+
+
+def _hidden_firm(name) -> bool:
+    n = _norm_firm(str(name or ""))
+    return n in _HIDDEN_FIRMS_EXACT or any(n.startswith(h) for h in _HIDDEN_FIRMS)
+
+
 def job_record(row: dict, type_val: str) -> dict:
     jid = row.get("job_id")
     return {
@@ -568,6 +582,7 @@ def wire_lateral(data: dict) -> None:
     grace = [r for r in metabase_sql(MB_DB, LATERAL_GRACE_SQL)                 # public + fresh, not yet published
              if r.get("job_id") not in published_ids]
     rows = _dedup_lateral(rows + grace)                                        # drop location-less near-dup twins
+    rows = [r for r in rows if not _hidden_firm(r.get("firm"))]
     rows = sorted(rows, key=lambda r: (r.get("open_date") or ""), reverse=True)
 
     def typ(hts):
@@ -584,7 +599,8 @@ def wire_pc(data: dict) -> None:
     published_ids = {r.get("job_id") for r in rows}
     grace = [r for r in metabase_sql(MB_DB, PC_GRACE_SQL)                      # public + fresh, not yet published
              if r.get("job_id") not in published_ids]
-    rows = sorted(rows + grace, key=lambda r: (r.get("open_date") or ""), reverse=True)
+    rows = sorted((r for r in rows + grace if not _hidden_firm(r.get("firm"))),
+                  key=lambda r: (r.get("open_date") or ""), reverse=True)
     data["tables"]["pc"] = [job_record(r, r.get("clerk_type") or "Post-Judicial Clerkship") for r in rows]
     print(f"  post-judicial-clerkship: {len(rows)} listings ({len(grace)} public-but-unpublished grace)")
 
@@ -788,7 +804,8 @@ def wire_entry3l(data: dict) -> None:
     def _kept(rec):
         lk = rec.get("3L Job Listing")
         href = lk.get("href", "") if isinstance(lk, dict) else ""
-        return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS)
+        return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS) \
+            and not _hidden_firm(rec.get("Employer"))
     table = [rec for rec in table if _kept(rec)]
 
     data["tables"]["entry3l"] = table
@@ -1168,6 +1185,7 @@ def wire_summer_split(data: dict) -> None:
     ff_by_id = {"1L": {}, "2L": {}}  # job_id -> the record object, so the Airtable merge can retitle it
     now = datetime.datetime.now(datetime.timezone.utc)
     mcur = set()  # distinct job ids opened this calendar month (as shown in the tables)
+    rows = [r for r in rows if not _hidden_firm(r.get("firm"))]   # keeps hidden firms out of mcur too
     for r in rows:
         # Class comes from the Flo Forward grad-year TARGET field (g2L = grad-2028, g1L = grad-2029);
         # that's the backbone. Grad-year can't tell a class's 1L summer from its 2L summer (both carry
@@ -1350,7 +1368,8 @@ def wire_summer_split(data: dict) -> None:
     def _kept(rec, lv):
         lk = rec.get(f"{lv} Job Listing")
         href = lk.get("href", "") if isinstance(lk, dict) else ""
-        return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS)
+        return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS) \
+            and not _hidden_firm(rec.get("Employer"))
     for lv in ("1L", "2L"):
         for bkt in out[lv]:
             out[lv][bkt] = [rec for rec in out[lv][bkt] if _kept(rec, lv)]
