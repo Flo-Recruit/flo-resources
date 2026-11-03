@@ -454,6 +454,10 @@ _GRACE_JUNK_TITLE = (r"\\btest\\b|template|self.?identification|internal apply o
                      r"attorney general application|lateral attorney general|incoming associates|"
                      r"partner team candidates|[0-9]{4}.*candidates|target .*candidates")
 
+# One-off keeps: individual public lateral roles held past the 60-day grace window below (still subject
+# to every other gate: public, not closed, lateral tags, etc.). Not a rule — remove an id once it closes.
+#   24464  Dickinson Wright "Trademark Associate Attorney" (Elizabeth 2026-11-03)
+
 LATERAL_GRACE_SQL = """
 SELECT j.ID AS job_id, o.NAME AS firm, j.TITLE AS position,
   j.DESCRIPTION AS descr, j.OPEN_DATE AS open_date, j.UPDATED_AT AS updated_at,
@@ -469,7 +473,8 @@ LEFT JOIN HIRING_TYPE ht ON ht.ID = jht.HIRING_TYPE_ID
 WHERE (j.FORWARD_PUBLISHING_STATUS IS NULL OR j.FORWARD_PUBLISHING_STATUS <> 'PUBLISHED')
   AND j.DELETED_AT IS NULL
   AND j.IS_PUBLIC = TRUE                                   -- guarantees the listing link renders
-  AND j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 60 DAY)      -- freshness: "just posted, not flipped yet"
+  AND (j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 60 DAY)     -- freshness: "just posted, not flipped yet"
+       OR j.ID IN (24464))                                -- one-off keeps (see comment above)
   AND (j.CLOSE_DATE IS NULL OR j.CLOSE_DATE >= NOW())      -- and not already closed
   AND (j.JOB_TYPE IN ('ATS','MANUAL_ENTRY') OR j.JOB_TYPE IS NULL) AND j.JOB_CLASSIFICATION = 'LAW_FIRM'
   AND LOWER(o.NAME) NOT REGEXP '%s'
