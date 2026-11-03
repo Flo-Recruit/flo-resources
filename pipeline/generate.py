@@ -469,7 +469,14 @@ LEFT JOIN HIRING_TYPE ht ON ht.ID = jht.HIRING_TYPE_ID
 WHERE (j.FORWARD_PUBLISHING_STATUS IS NULL OR j.FORWARD_PUBLISHING_STATUS <> 'PUBLISHED')
   AND j.DELETED_AT IS NULL
   AND j.IS_PUBLIC = TRUE                                   -- guarantees the listing link renders
-  AND j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 60 DAY)      -- freshness: "just posted, not flipped yet"
+  -- Freshness: MANUAL_ENTRY roles get 60 days ("just posted, not flipped yet"). ATS roles come from
+  -- the firm's own Flo careers site, so they are live postings in their own right and get the SAME
+  -- lifetime as published ones: up to the close date, or 6 months from opening when there is none
+  -- (Elizabeth 2026-11-03: Dickinson Wright "Real Estate Finance Associate", job 26498, dropped at
+  -- day 60 while still live on dwlaw's careers site).
+  AND ((j.JOB_TYPE = 'ATS' AND ((j.CLOSE_DATE IS NOT NULL AND j.CLOSE_DATE >= NOW())
+                                OR (j.CLOSE_DATE IS NULL AND j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 6 MONTH))))
+       OR j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 60 DAY))
   AND (j.CLOSE_DATE IS NULL OR j.CLOSE_DATE >= NOW())      -- and not already closed
   AND (j.JOB_TYPE IN ('ATS','MANUAL_ENTRY') OR j.JOB_TYPE IS NULL) AND j.JOB_CLASSIFICATION = 'LAW_FIRM'
   AND LOWER(o.NAME) NOT REGEXP '%s'
