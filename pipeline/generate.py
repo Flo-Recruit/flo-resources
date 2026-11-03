@@ -419,8 +419,10 @@ WHERE j.FORWARD_PUBLISHING_STATUS = 'PUBLISHED' AND j.DELETED_AT IS NULL
   --   no close date    -> drop 6 months after it opened (default staleness cutoff for rolling roles).
   -- Applies to the _JOB_SELECT tables only (lateral non-partner, judicial clerk, 3L entry-level); the
   -- student summer tables use SUMMER_SQL + their own seasonal timeline. (No rows have both dates null.)
+  -- One-off keep: job 24464, Dickinson Wright "Trademark Associate Attorney" (opened 2026-04-26, no close
+  -- date, still live — Elizabeth 2026-11-03). Not a rule; remove the id once the role closes.
   AND ((j.CLOSE_DATE IS NOT NULL AND j.CLOSE_DATE >= NOW())
-       OR (j.CLOSE_DATE IS NULL AND j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 6 MONTH)))
+       OR (j.CLOSE_DATE IS NULL AND (j.OPEN_DATE >= DATE_SUB(NOW(), INTERVAL 6 MONTH) OR j.ID IN (24464))))
   -- ATS + MANUAL_ENTRY (both are real Forward postings; ATS-only was an over-filter
   -- inherited from the attorney base — it dropped MANUAL_ENTRY 3L roles like Latham).
   -- lateral/pc are tag-gated so unaffected; entry3l gains its MANUAL_ENTRY roles.
