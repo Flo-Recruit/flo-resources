@@ -927,6 +927,7 @@ _DA_FIRM_NAMES = {
     "Elsberg Baker & Maruri": "Elsberg Baker & Maruri PLLC",
     "Cox, Castle & Nicholson": "Cox, Castle & Nicholson LLP",
     "HSF Kramer": "Herbert Smith Freehills Kramer",
+    "Katten": "Katten Muchin Rosenman",
 }
 
 
