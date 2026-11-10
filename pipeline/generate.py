@@ -2422,12 +2422,38 @@ def _lu_seed(row, seed_col, today):
     return today
 
 
+def _lu_pair(prev_rows, rows, name_col, pos_col, link_col):
+    """Pair each current row with its prior-refresh row -> {id(row): prev_row}. Rows sharing a key
+    (same firm + title and no job link, e.g. Ballard Spahr's two "2L Summer Associate 2028" survey
+    rows opening 1/1 and 6/1) are paired by identical content first, then leftovers in order, so one
+    twin isn't compared against the other and restamped as "updated" on every refresh. Each prior
+    row is used at most once."""
+    pool = {}
+    for r in prev_rows:
+        pool.setdefault(_lu_key(name_col, pos_col, link_col, r), []).append(r)
+    out, rest = {}, []
+    for row in rows:                                   # pass 1: unchanged rows claim their twin
+        cands = pool.get(_lu_key(name_col, pos_col, link_col, row)) or []
+        sig = _lu_sig(row)
+        hit = next((i for i, c in enumerate(cands) if _lu_sig(c) == sig), None)
+        if hit is None:
+            rest.append(row)
+        else:
+            out[id(row)] = cands.pop(hit)
+    for row in rest:                                   # pass 2: edited rows take what's left
+        cands = pool.get(_lu_key(name_col, pos_col, link_col, row))
+        if cands:
+            out[id(row)] = cands.pop(0)
+    return out
+
+
 def stamp_last_updated(tables: dict, prev_tables: dict) -> None:
     today = TODAY.strftime("%b %-d, %Y")
     for key, (shape, name_col, pos_col, link_col, seed_col, drop_seed) in _LU_TABLES.items():
-        prev = {_lu_key(name_col, pos_col, link_col, r): r for r in _lu_rows(shape, (prev_tables or {}).get(key))}
-        for row in _lu_rows(shape, tables.get(key)):
-            p = prev.get(_lu_key(name_col, pos_col, link_col, row))
+        rows = _lu_rows(shape, tables.get(key))
+        pairs = _lu_pair(_lu_rows(shape, (prev_tables or {}).get(key)), rows, name_col, pos_col, link_col)
+        for row in rows:
+            p = pairs.get(id(row))
             if p is None:
                 row["Last updated"] = _lu_seed(row, seed_col, today)
             elif _lu_sig(p) == _lu_sig(row):
@@ -2452,12 +2478,13 @@ def stamp_last_updated_at(tables: dict, prev_tables: dict) -> None:
     Keyed and signature-compared exactly like the date stamp; "_srcAt" is consumed and dropped."""
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     for key, (shape, name_col, pos_col, link_col, seed_col, drop_seed) in _LU_TABLES.items():
-        prev = {_lu_key(name_col, pos_col, link_col, r): r for r in _lu_rows(shape, (prev_tables or {}).get(key))}
-        for row in _lu_rows(shape, tables.get(key)):
+        rows = _lu_rows(shape, tables.get(key))
+        pairs = _lu_pair(_lu_rows(shape, (prev_tables or {}).get(key)), rows, name_col, pos_col, link_col)
+        for row in rows:
             src = row.get("_srcAt")
             timed = _lu_timed(src)
             fresh = timed if timed else (None if src else now_iso)  # date-only source -> None; no source -> now
-            p = prev.get(_lu_key(name_col, pos_col, link_col, row))
+            p = pairs.get(id(row))
             if p is None:
                 at = fresh
             elif _lu_sig(p) == _lu_sig(row):
