@@ -1181,6 +1181,13 @@ _DUAL_OVERRIDE = {
 }
 
 
+# Manual exceptions the other way: live summer jobs whose title doesn't say 2L but whose description
+# makes them 2L-only, so a grad-2029-targeted one would otherwise default to 1L. Listing an id here
+# files it as a Class-of-2029 2L role only. Remove an id once the firm fixes the title / targeting.
+_2L_ONLY_OVERRIDE = {
+    28656,          # Drew Eckl & Farnham — "Summer Associates" (description: 2L only; Elizabeth 2026-11-17)
+}
+
 def _bit(v):
     """Coerce a MySQL BIT / Metabase boolean cell (1, True, '1', 'true') to a Python bool."""
     return v is True or v == 1 or str(v).strip().lower() == "true"
@@ -1209,8 +1216,11 @@ def wire_summer_split(data: dict) -> None:
         # (Vinson & Elkins "Second Year Summer Associate - Multiple Offices", job 28098).
         is1Lish = bool(re.search(r"\b1l\b|\b(?:first|1st)[\s-]+year\b", _title))
         is2Lish = bool(re.search(r"\b2l\b|\b(?:second|2nd)[\s-]+year\b", _title) or "2028" in _title)
-        dual = (_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish) \
-            or (str(r.get("job_id")) in {str(j) for j in _DUAL_OVERRIDE})
+        only2L = str(r.get("job_id")) in {str(j) for j in _2L_ONLY_OVERRIDE}
+        if only2L:
+            is1Lish, is2Lish = False, True
+        dual = not only2L and ((_bit(r.get("is_1l")) and _bit(r.get("is_2l"))) or (is1Lish and is2Lish)
+                               or (str(r.get("job_id")) in {str(j) for j in _DUAL_OVERRIDE}))
         # A title naming the 2028 SUMMER ("2028 Fried Frank Summer Associate", "2028 2L Summer Associate")
         # is the Class of 2029's 2L summer, even when Forward targets grad-year 2028 — the Class of 2028
         # spends its 2L summer in 2027. "Class of 2028" in the title is the grad year, not the summer,
