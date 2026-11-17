@@ -807,11 +807,17 @@ def wire_entry3l(data: dict) -> None:
     # 2026-10-26). And Greenberg Glusker "Litigation Associate (Mid-Level)" (job 26940) and "Tax Associate
     # (Mid-Level to Senior)" (job 26534): mid-level roles, not entry-level (Hannah 2026-10-27).
     _DROP_JOB_IDS = ("27362", "27491", "26940", "26534")
+    # Airtable survey rows (no job link) to keep out of the 3L table, by (firm, title), lowercased.
+    # Potomac Legal Group "Associate Attorney": a lateral role (Flo Forward job 28691), not 3L
+    # (Elizabeth 2026-11-17).
+    _DROP_SURVEY = {("potomac legal group, llc", "associate attorney")}
 
     def _kept(rec):
         lk = rec.get("3L Job Listing")
         href = lk.get("href", "") if isinstance(lk, dict) else ""
+        ft = (str(rec.get("Employer") or "").strip().lower(), str(rec.get("3L Position") or "").strip().lower())
         return not any(f"/jobs/{jid}" in href for jid in _DROP_JOB_IDS) \
+            and not (not href and ft in _DROP_SURVEY) \
             and not _hidden_firm(rec.get("Employer"))
     table = [rec for rec in table if _kept(rec)]
 
