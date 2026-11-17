@@ -1186,6 +1186,7 @@ _DUAL_OVERRIDE = {
 # files it as a Class-of-2029 2L role only. Remove an id once the firm fixes the title / targeting.
 _2L_ONLY_OVERRIDE = {
     28656,          # Drew Eckl & Farnham — "Summer Associates" (description: 2L only; Elizabeth 2026-11-17)
+    28524,          # Axinn — "Summer Associate" (2L only; Elizabeth 2026-11-17)
 }
 
 def _bit(v):
