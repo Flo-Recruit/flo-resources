@@ -808,7 +808,9 @@ def wire_entry3l(data: dict) -> None:
     # (Mid-Level to Senior)" (job 26534): mid-level roles, not entry-level (Hannah 2026-10-27).
     # Sheppard Mullin "Labor & Employment Litigation Associate (Chicago)" (job 28622): a lateral role,
     # stays in the lateral table only (Elizabeth 2026-11-23).
-    _DROP_JOB_IDS = ("27362", "27491", "26940", "26534", "28622")
+    # Winston Taylor "Corporate 3L Entry-Level Associate (2027 JD)- Chicago Office" (job 26946): closed,
+    # though still open on Flo Forward (Elizabeth 2026-11-24).
+    _DROP_JOB_IDS = ("27362", "27491", "26940", "26534", "28622", "26946")
     # Airtable survey rows (no job link) to keep out of the 3L table, by (firm, title), lowercased.
     # Potomac Legal Group "Associate Attorney": a lateral role (Flo Forward job 28691), not 3L
     # (Elizabeth 2026-11-17).
