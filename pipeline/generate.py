@@ -1222,6 +1222,13 @@ _2L_ONLY_OVERRIDE = {
     28524,          # Axinn — "Summer Associate" (2L only; Elizabeth 2026-11-17)
 }
 
+# Live summer jobs to file as Class-of-2029 1L even though Flo Forward carries no 2029/2028 grad-year
+# target (so they'd otherwise be skipped — and their Airtable placeholder, matched by job id, is dropped
+# too, leaving the firm off the tracker). Remove an id once the firm sets the grad-year target.
+_FORCE_1L_2029 = {
+    29181,          # Gibbs & Bruns — "1L Summer Clerkship" (Houston) (Elizabeth 2026-11-24)
+}
+
 def _bit(v):
     """Coerce a MySQL BIT / Metabase boolean cell (1, True, '1', 'true') to a Python bool."""
     return v is True or v == 1 or str(v).strip().lower() == "true"
@@ -1245,6 +1252,8 @@ def wire_summer_split(data: dict) -> None:
         # set, or a "1L/2L" dual title) belongs in BOTH tables, so it emits both targets (e.g. King &
         # Spalding "1L/2L Dual Summer Associate", job 27437). (level, class-grad-year) targets:
         g1, g2 = int(r.get("g1L") or 0), int(r.get("g2L") or 0)
+        if not (g1 or g2) and str(r.get("job_id")) in {str(j) for j in _FORCE_1L_2029}:
+            g1 = 1
         _title = str(r.get("position") or "").lower()
         # The level may be spelled out: "First Year"/"1st Year" = 1L, "Second Year"/"2nd Year" = 2L
         # (Vinson & Elkins "Second Year Summer Associate - Multiple Offices", job 28098).
