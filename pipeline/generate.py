@@ -60,12 +60,35 @@ def airtable_records(table_id: str, field_ids: list[str]) -> list[dict]:
 
 
 # ── small utils ───────────────────────────────────────────────────────────────
+from zoneinfo import ZoneInfo
+_CT = ZoneInfo("America/Chicago")
+
+
+def _local_date(v) -> datetime.date:
+    """Calendar date of a source date/datetime, in Central time. Flo Forward stores open/close datetimes
+    in UTC, so a 3/1/2027 11:59 PM CT close comes back as 2027-03-02T05:59Z — taking its first 10 chars
+    showed 3/2 (Baker McKenzie, Juli 2026-11-24). Date-only values, and exact-midnight-UTC datetimes (a
+    date with no time), keep their date as-is. Raises ValueError on unparseable input."""
+    s = str(v).strip()
+    if len(s) > 10 and s[10] in "T ":
+        try:
+            dt = datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.date.fromisoformat(s[:10])
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        if dt.utcoffset() == datetime.timedelta(0) and dt.time() == datetime.time(0, 0):
+            return dt.date()
+        return dt.astimezone(_CT).date()
+    return datetime.date.fromisoformat(s[:10])
+
+
 def fmt_date(iso: str | None) -> str:
     """'2026-07-15' -> 'Jul 15, 2026'; '' / None -> '—'."""
     if not iso:
         return "—"
     try:
-        d = datetime.date.fromisoformat(iso[:10])
+        d = _local_date(iso)
         return d.strftime("%b %-d, %Y")
     except ValueError:
         return iso
@@ -323,7 +346,7 @@ def fmt_mdy(iso) -> str:
     if not iso:
         return ""
     try:
-        d = datetime.date.fromisoformat(str(iso)[:10])
+        d = _local_date(iso)
         return f"{d.month}/{d.day}/{d.year}"
     except ValueError:
         return str(iso)
@@ -868,7 +891,7 @@ def _close_passed(close) -> bool:
     if not close:
         return False
     try:
-        return datetime.date.fromisoformat(str(close)[:10]) < TODAY
+        return _local_date(close) < TODAY
     except ValueError:
         return False
 
