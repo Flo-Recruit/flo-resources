@@ -1437,7 +1437,9 @@ def wire_summer_split(data: dict) -> None:
     # id drop; remove this entry if the source listing is ever taken down.
     # Also Wolf Greenfield "Northeastern Co-op Application" (job 27914): an entry-level role that stays
     # in the 3L table only, though Forward also targets it at the 2028 class (Hannah 2026-10-27).
-    _DROP_JOB_IDS = ("25041", "27914")
+    # Also Shumaker "Summer Associate (1L)" Toledo / Columbus (jobs 28521, 28522), taken off the tracker
+    # (Elizabeth 2026-11-25).
+    _DROP_JOB_IDS = ("25041", "27914", "28521", "28522")
 
     def _kept(rec, lv):
         lk = rec.get(f"{lv} Job Listing")
